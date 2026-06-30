@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ Thống Quản Lý Kiểm Hàng</title>
+<style>
+  :root{--gd:#1a5c2a;--gm:#2e7d32;--gl:#4caf50;--gp:#e8f5e9;--gh:#c8e6c9;--red:#c62828;--rp:#ffebee;--yel:#f57f17;--yp:#fffde7;--bor:#a5d6a7;--gray:#546e7a;--shad:0 2px 8px rgba(0,0,0,.12)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f8e9;color:#1b2b1b;font-size:13px}
+  .hdr{background:linear-gradient(135deg,var(--gd),#388e3c);color:#fff;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shad)}
+  .hdr h1{font-size:17px;font-weight:700}.hdr .sub{font-size:11px;opacity:.85;margin-top:2px}
+  .hdr-r{display:flex;gap:8px;align-items:center}
+  .stats{display:flex;gap:10px;padding:9px 20px;background:#fff;border-bottom:2px solid var(--bor);flex-wrap:wrap}
+  .sc{background:var(--gp);border:1px solid var(--bor);border-radius:8px;padding:7px 14px;text-align:center;min-width:88px;cursor:pointer;transition:.15s;user-select:none}
+  .sc:hover{transform:translateY(-2px);box-shadow:var(--shad)}
+  .sc.act{outline:2px solid var(--gd);outline-offset:1px}
+  .sc.pass.act{outline-color:var(--gm)}.sc.fail.act{outline-color:var(--red)}.sc.pend.act{outline-color:var(--yel)}
+  .sc .n{font-size:20px;font-weight:700;color:var(--gd)}.sc .l{font-size:10px;color:var(--gray);margin-top:1px}
+  .sc.pass{background:#e8f5e9;border-color:#66bb6a}.sc.pass .n{color:var(--gm)}
+  .sc.fail{background:var(--rp);border-color:#ef9a9a}.sc.fail .n{color:var(--red)}
+  .sc.pend{background:var(--yp);border-color:#ffe082}.sc.pend .n{color:var(--yel)}
+  .fb{background:#fff;padding:9px 20px;border-bottom:1px solid var(--bor);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .fb select,.fb input{border:1px solid var(--bor);border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;outline:none}
+  .fb select:focus,.fb input:focus{border-color:var(--gl)}
+  .fb input[type=text]{width:190px}
+  .btn{border:none;border-radius:6px;padding:6px 13px;cursor:pointer;font-size:12px;font-weight:600;transition:.15s}
+  .bg{background:var(--gm);color:#fff}.bg:hover{background:var(--gd)}
+  .br{background:var(--red);color:#fff}.br:hover{background:#b71c1c}
+  .bb{background:#1565c0;color:#fff}.bb:hover{background:#0d47a1}
+  .bo{background:#e65100;color:#fff}.bo:hover{background:#bf360c}
+  .bgr{background:#eceff1;color:#37474f}.bgr:hover{background:#cfd8dc}
+  .rc{font-size:11px;color:var(--gray);margin-left:auto;align-self:center}
+  .tw{overflow-x:auto;padding:0 20px 20px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:var(--shad);margin-top:10px}
+  thead tr{background:var(--gm);color:#fff}
+  thead th{padding:8px 7px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+  thead th:hover{background:var(--gd)}
+  tbody tr{border-bottom:1px solid #e8f5e9;transition:background .1s}
+  tbody tr:hover{background:var(--gp)}
+  tbody td{padding:6px 7px;font-size:12px;vertical-align:middle}
+  tbody tr.rf{background:#fff8f8}.tbody tr.rf:hover{background:#ffe8e8}
+  tbody tr.rp{background:#fffef5}
+  .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+  .bpass{background:#c8e6c9;color:#1b5e20}.bfail{background:#ffcdd2;color:#b71c1c}.bpend{background:#fff9c4;color:#7c4d00}
+  .btk{background:#e3f2fd;color:#0d47a1}.b3rd{background:#f3e5f5;color:#4a148c}.bqc{background:#fce4ec;color:#880e4f}
+  .ab{border:none;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:11px;margin:0 2px}
+  .ae{background:#e3f2fd;color:#1565c0}.ae:hover{background:#bbdefb}
+  .ad{background:#ffebee;color:#c62828}.ad:hover{background:#ffcdd2}
+  .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+  .mo.act{display:flex}
+  .md{background:#fff;border-radius:10px;padding:22px;width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+  .md h2{color:var(--gd);font-size:15px;margin-bottom:14px;border-bottom:2px solid var(--bor);padding-bottom:7px}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .fgr{display:flex;flex-direction:column;gap:4px}
+  .fgr.full{grid-column:1/-1}
+  .fgr label{font-size:11px;font-weight:600;color:var(--gray)}
+  .fgr input,.fgr select,.fgr textarea{border:1px solid var(--bor);border-radius:6px;padding:6px 9px;font-size:12px;outline:none;font-family:inherit}
+  .fgr input:focus,.fgr select:focus,.fgr textarea:focus{border-color:var(--gl)}
+  .fgr textarea{resize:vertical;min-height:48px}
+  .ma{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .pm{background:#fff;border-radius:10px;padding:22px;width:310px;text-align:center}
+  .pm h3{color:var(--gd);margin-bottom:10px}
+  .pm input{width:100%;border:1px solid var(--bor);border-radius:6px;padding:8px;font-size:14px;text-align:center;letter-spacing:4px;outline:none;margin-bottom:9px}
+  .pe{color:var(--red);font-size:11px;margin-bottom:7px;min-height:14px}
+  .im{background:#fff;border-radius:10px;padding:22px;width:680px;max-width:95vw}
+  .im textarea{width:100%;height:150px;border:1px solid var(--bor);border-radius:6px;padding:8px;font-size:11px;font-family:monospace;resize:vertical;outline:none}
+  .nd{text-align:center;padding:40px;color:var(--gray);font-style:italic}
+  .sa{font-size:9px;margin-left:2px}
+  /* admin badge */
+  .admin-badge{background:#fff3e0;border:1px solid #ffe082;border-radius:20px;padding:3px 11px;font-size:11px;color:#e65100;font-weight:700;cursor:pointer}
+  .admin-badge.on{background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20}
+  /* bulk toolbar */
+  .bulk-bar{display:none;background:#fff8e1;border-bottom:2px solid #ffe082;padding:7px 20px;gap:8px;align-items:center;flex-wrap:wrap}
+  .bulk-bar.show{display:flex}
+  /* checkbox col */
+  .cb-col{width:32px;text-align:center}
+  /* custom fields area */
+  .cf-row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+  .cf-row input{border:1px solid var(--bor);border-radius:6px;padding:5px 7px;font-size:12px;flex:1}
+  .cf-row input:focus{border-color:var(--gl);outline:none}
+  .cf-del{background:#ffebee;color:#c62828;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px}
+  .cf-add{background:var(--gp);color:var(--gd);border:1px dashed var(--gl);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;margin-top:4px}
+  /* clone button */
+  .acl{background:#e8f5e9;color:#2e7d32}.acl:hover{background:#c8e6c9}
+  /* admin-only columns */
+  .admin-col{display:none}
+  .admin-on .admin-col{display:table-cell}
+  .admin-on-flex .admin-col-flex{display:inline-block}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><h1>🏭 HỆ THỐNG QUẢN LÝ KIỂM HÀNG</h1><div class="sub">COMART VIETNAM — Bộ phận QC/QA | Năm 2025–2026</div></div>
+  <div class="hdr-r">
+    <span class="admin-badge" id="adminBadge" onclick="toggleAdmin()">🔒 Admin</span>
+    <button class="btn bg" onclick="openAdd()">+ Thêm mới</button>
+    <button class="btn bb" onclick="openImport()">📥 Import CSV</button>
+    <button class="btn bo" onclick="exportCSV()">📤 Xuất CSV</button>
+  </div>
+</div>
+
+<div class="stats" id="statsBar"></div>
+<div class="bulk-bar" id="bulkBar">
+  <b id="bulkCount">0 dòng đã chọn</b>
+  <button class="btn br" onclick="bulkDelete()">🗑 Xóa hàng loạt</button>
+  <button class="btn bgr" onclick="clearSelection()">✕ Bỏ chọn tất cả</button>
+</div>
+
+<div class="fb">
+  <input type="text" id="fS" placeholder="🔍 Tìm mã hàng / tên hàng / PO / ĐĐH..." oninput="applyFilters()">
+  <select id="fKH" onchange="applyFilters()"><option value="">-- Tất cả KH --</option></select>
+  <select id="fHM" onchange="applyFilters()">
+    <option value="">-- Tất cả hạng mục --</option>
+    <option>Tự kiểm</option><option>Bên thứ 3 KH chỉ định</option><option>QC khách hàng</option>
+  </select>
+  <select id="fKQ" onchange="applyFilters()">
+    <option value="">-- Tất cả kết quả --</option>
+    <option>PASS</option><option>FAIL</option><option>PENDING</option>
+  </select>
+  <select id="fTH" onchange="applyFilters()">
+    <option value="">-- Tất cả tháng --</option>
+    <option value=".01">T1</option><option value=".02">T2</option><option value=".03">T3</option>
+    <option value=".04">T4</option><option value=".05">T5</option><option value=".06">T6</option>
+    <option value=".07">T7</option><option value=".08">T8</option><option value=".09">T9</option>
+    <option value=".10">T10</option><option value=".11">T11</option><option value=".12">T12</option>
+  </select>
+  <select id="fNAM" onchange="applyFilters()">
+    <option value="">-- Tất cả năm --</option>
+    <option value="2025">2025</option><option value="2026">2026</option>
+  </select>
+  <button class="btn bgr" onclick="clearFilters()">✕ Xóa lọc</button>
+  <span class="rc" id="rowCount"></span>
+</div>
+
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th class="cb-col admin-col"><input type="checkbox" id="cbAll" onchange="toggleAll(this.checked)" title="Chọn tất cả"></th>
+      <th onclick="sb('id')">STT<span class="sa" id="s_id"></span></th>
+      <th onclick="sb('ngay')">Ngày tháng<span class="sa" id="s_ngay"></span></th>
+      <th onclick="sb('kh')">Khách hàng<span class="sa" id="s_kh"></span></th>
+      <th onclick="sb('hm')">Hạng mục kiểm<span class="sa" id="s_hm"></span></th>
+      <th>Đơn đặt hàng</th>
+      <th onclick="sb('ma')">Mã hàng<span class="sa" id="s_ma"></span></th>
+      <th onclick="sb('ten')">Tên hàng<span class="sa" id="s_ten"></span></th>
+      <th>PO</th>
+      <th onclick="sb('sl')">SL đơn hàng<span class="sa" id="s_sl"></span></th>
+      <th>Người kiểm</th>
+      <th onclick="sb('kq')">Kết quả<span class="sa" id="s_kq"></span></th>
+      <th>Ghi chú</th>
+      <th class="admin-col">Thao tác</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+  <div id="nd" class="nd" style="display:none">Không có dữ liệu phù hợp</div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="mo" id="fModal">
+  <div class="md">
+    <h2 id="mTitle">➕ Thêm bản ghi mới</h2>
+    <div class="fg">
+      <div class="fgr"><label>Ngày tháng (YYYY.MM.DD hoặc YYYY.MM)</label><input type="text" id="fi_ngay" placeholder="2026.06.18"></div>
+      <div class="fgr"><label>Khách hàng</label><input type="text" id="fi_kh" placeholder="Scosche / Dorman / ELECOM..."></div>
+      <div class="fgr"><label>Hạng mục kiểm</label>
+        <select id="fi_hm" onchange="toggleCustomHM(this)">
+          <option>Tự kiểm</option>
+          <option>Bên thứ 3 KH chỉ định</option>
+          <option>QC khách hàng</option>
+          <option value="__other__">✏️ Khác (tự nhập)...</option>
+        </select>
+        <input type="text" id="fi_hm_other" placeholder="Nhập hạng mục..." style="display:none;margin-top:5px">
+      </div>
+      <div class="fgr"><label>Đơn đặt hàng</label><input type="text" id="fi_ddh" placeholder="PC813-... / 4510..."></div>
+      <div class="fgr"><label>Mã hàng</label><input type="text" id="fi_ma" placeholder="8SHB... / 8HSG..."></div>
+      <div class="fgr"><label>Tên hàng</label><input type="text" id="fi_ten"></div>
+      <div class="fgr"><label>PO</label><input type="text" id="fi_po"></div>
+      <div class="fgr"><label>Số lượng đơn hàng</label><input type="number" id="fi_sl"></div>
+      <div class="fgr"><label>Người kiểm</label><input type="text" id="fi_nk"></div>
+      <div class="fgr"><label>Kết quả</label>
+        <select id="fi_kq" onchange="toggleCustomKQ(this)">
+          <option>PASS</option>
+          <option>FAIL</option>
+          <option>PENDING</option>
+          <option value="__other__">✏️ Khác (tự nhập)...</option>
+        </select>
+        <input type="text" id="fi_kq_other" placeholder="Nhập kết quả..." style="display:none;margin-top:5px">
+      </div>
+      <div class="fgr full"><label>Ghi chú</label><textarea id="fi_gc"></textarea></div>
+      <div class="fgr full">
+        <label>Trường dữ liệu tùy chỉnh</label>
+        <div id="customFields"></div>
+        <button class="cf-add" onclick="addCustomField()">＋ Thêm trường tùy chỉnh</button>
+      </div>
+    </div>
+    <div class="ma">
+      <button class="btn bgr" onclick="closeM('fModal')">Hủy</button>
+      <button class="btn bg" onclick="saveRec()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- PWD MODAL -->
+<div class="mo" id="pModal">
+  <div class="pm">
+    <h3>🔒 Xác nhận Admin</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:11px">Nhập mật khẩu để tiếp tục</p>
+    <input type="password" id="pi" placeholder="••••••" onkeydown="if(event.key==='Enter')chkPwd()">
+    <div class="pe" id="pe"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn bgr" onclick="closeM('pModal')">Hủy</button>
+      <button class="btn bg" onclick="chkPwd()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="mo" id="iModal">
+  <div class="im">
+    <h2>📥 Import dữ liệu CSV</h2>
+    <p style="font-size:12px;color:#666;margin-bottom:9px">Định dạng mỗi dòng: <b>Ngày | KH | HạngMục | ĐĐH | MãHàng | TênHàng | PO | SốLượng | NguờiKiểm | KếtQuả | GhiChú</b></p>
+    <textarea id="iText" placeholder="Dán dữ liệu vào đây..."></textarea>
+    <div class="ma">
+      <button class="btn bgr" onclick="closeM('iModal')">Hủy</button>
+      <button class="btn bg" onclick="doImport()">✅ Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PWD='123456';
+let data=[],filtered=[],editId=null,pwdCb=null,sCol='id',sDir=1,nextId=1;
+let adminMode=false; // session admin flag
+
+// ===================== DATA =====================
+const initData=[
+// === SCOSCHE TỰ KIỂM ===
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.02',ddh:'PC813-2511060001',ma:'8SHB060043',ten:'VWDSM2-HL1',po:'#162039',sl:4536,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.02',ddh:'PC813-2511110001',ma:'8SHV130009',ten:'MMWSM-RP',po:'#161987',sl:10032,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.03',ddh:'PC813-2511110001',ma:'8SHB060035',ten:'UH4WSML-SP',po:'#161987',sl:4032,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.05',ddh:'PC813-2511110001',ma:'8SHB130231',ten:'SMS2DV-SP',po:'#161987',sl:4000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.05',ddh:'PC813-2511060001',ma:'8SHB130233',ten:'MPMSWDV-HL1',po:'#162039',sl:1200,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.06',ddh:'PC813-2512010001',ma:'8SHB060036',ten:'iHW10-HL1',po:'#162087',sl:5088,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.07',ddh:'PC813-2512100001',ma:'8SHB130212',ten:'MAGFM',po:'#162000',sl:1000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.07',ddh:'PC813-2511100002',ma:'8SHB010065',ten:'SMS2WDA-SP',po:'#161998',sl:1000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.07',ddh:'PC813-2511100002',ma:'8SHK130002',ten:'MMV-RPMX1',po:'#161998',sl:3024,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.09',ddh:'PC813-2510130002',ma:'8SHB060041',ten:'GHVWD',po:'#161911',sl:6000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.10',ddh:'PC813-2511210002',ma:'8SHD130032',ten:'MXDM-XCES0',po:'#162080',sl:3100,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.10',ddh:'PC813-2512010001',ma:'8SHW130002',ten:'MMDSD-RPMX1',po:'#162087',sl:6624,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.14',ddh:'PC813-2511270001',ma:'KLSH000049',ten:'MPLT54L-2PKBP0',po:'#162080',sl:6000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.16',ddh:'PC813-2511100003',ma:'8SHD130025',ten:'MAGWSM-2PXCES0',po:'#162037',sl:1050,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.16',ddh:'PC813-2511110001',ma:'8SHB150033',ten:'BMG1WD2HD-VA',po:'#161987',sl:1504,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.21',ddh:'PC813-2511100001',ma:'8SHB060042',ten:'BMG1WDHD-VA',po:'#161996',sl:1200,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.21',ddh:'PC813-2511210001',ma:'8SHB010062',ten:'MAGWSM2',po:'#162082',sl:2040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.23',ddh:'PC813-2511100001',ma:'8SHB010062',ten:'MAGWSM2',po:'#161996',sl:3060,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.23',ddh:'PC813-2511110001',ma:'8SHB060040',ten:'GHVWD-SP',po:'#161987',sl:5040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.23',ddh:'PC813-2512010001',ma:'8SHB060043',ten:'VWDSM2-HL1',po:'#162087',sl:3240,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.26',ddh:'PC813-2511110001',ma:'8SHB130235',ten:'SMS2ODVR-SP',po:'#161987',sl:7536,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.26',ddh:'PC813-2512180001',ma:'8SHB060036',ten:'iHW10-HL1',po:'#162199',sl:5088,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.28',ddh:'PC813-2511110001',ma:'8SHB150034',ten:'MP2WD2HD-VA',po:'#161987',sl:1008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.28',ddh:'PC813-2511210002',ma:'8SHD130033',ten:'MXDM-2PXCES0',po:'#162080',sl:2080,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.28',ddh:'PC813-2511110001',ma:'8SHB130193',ten:'MP2WD-SP1',po:'#161987',sl:3000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.28',ddh:'PC813-2511100001',ma:'8SHB140007',ten:'MP2CUP2M-SP',po:'#161996',sl:1008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.29',ddh:'PC813-2511210001',ma:'8SHB010041',ten:'VWDSM2-SP',po:'#162082',sl:2592,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.29',ddh:'PC813-2511100001',ma:'8SHB130211',ten:'MAGDM2',po:'#161996',sl:5775,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.29',ddh:'PC813-2511210001',ma:'8SHV130011',ten:'MMWSM-MX',po:'#162082',sl:2016,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.01.30',ddh:'PC813-2511170001',ma:'8SHB130240',ten:'MPLTMSPCH-2PK',po:'#161996',sl:3300,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.06',ddh:'PC813-2601020006',ma:'S6SH000116',ten:'MXMS-20-UB',po:'#162129',sl:100,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.06',ddh:'PC813-2512010001',ma:'8SHB010065',ten:'SMS2WDA-SP',po:'#162087',sl:3000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.06',ddh:'PC813-2512100001',ma:'8SHD130031',ten:'MAGFM-2PXCES0',po:'#162000',sl:1000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.06',ddh:'PC813-2601020006',ma:'S6SH000117',ten:'MXMS-25-UB',po:'#162129',sl:100,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.09',ddh:'PC813-2511100002',ma:'8SHW990002',ten:'CMAA2-6PKRP',po:'#161998',sl:5088,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.09',ddh:'PC813-2512180001',ma:'8SHB130212',ten:'MAGFM',po:'#162199',sl:1000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.10',ddh:'PC813-2511100002',ma:'8SHB130214',ten:'MBM2SM',po:'#161998',sl:1536,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.10',ddh:'PC813-2510030004',ma:'8SHB010064',ten:'SMS2WD2-SP1',po:'#161866',sl:10000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.23',ddh:'PC813-2601210002',ma:'8SHB130225',ten:'MPLTMSPCH2-SP1',po:'#162244',sl:6000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.23',ddh:'PC813-2512010001',ma:'8SHB130233',ten:'MPMSWDV-HL1',po:'#162087',sl:2040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.23',ddh:'PC813-2601260001',ma:'G4SH000058',ten:'266BSB15BRT',po:'#162358',sl:3000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.24',ddh:'PC813-2511210002',ma:'8SHW130001',ten:'MMDSD-RP',po:'#162080',sl:3024,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.26',ddh:'PC813-2511110001',ma:'8SHB100018',ten:'UH4WDEX2-SP',po:'#161987',sl:5504,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.26',ddh:'PC813-2511100003',ma:'8SHB130215',ten:'MAGFMI',po:'#162037',sl:1000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.27',ddh:'PC813-2511110001',ma:'8SHB130206',ten:'MAGDV-SP1',po:'#161987',sl:20300,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.02.27',ddh:'PC813-2601020002',ma:'8SHB040036',ten:'UH5V3-HL1',po:'#162082',sl:3024,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.03',ddh:'PC813-2601020006',ma:'S6SH000116',ten:'MXMS-20-UB',po:'#162129',sl:900,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.03',ddh:'PC813-2601020006',ma:'S6SH000117',ten:'MXMS-25-UB',po:'#162129',sl:900,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.03',ddh:'PC813-2512180001',ma:'8SHB040032',ten:'VP2M-SP',po:'#162199',sl:1512,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.09',ddh:'PC813-2511110001',ma:'8SHB130217',ten:'MP2DVM-SP1',po:'#161987',sl:25040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.13',ddh:'PC813-2601210002',ma:'8SHB150033',ten:'BMG1WD2HD-VA',po:'#162244',sl:1008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.13',ddh:'PC813-2512180001',ma:'8SHB130226',ten:'MEMSD-SP',po:'#162199',sl:1020,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.17',ddh:'PC813-2512010001',ma:'8SHB060041',ten:'GHVWD',po:'#162087',sl:5040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.19',ddh:'PC813-2602120002',ma:'8SHC130014',ten:'MAGDMB',po:'#162348',sl:5100,nk:'Nguyễn Thị Yến',kq:'PASS',gc:'sai PO'},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.20',ddh:'PC813-2511110001',ma:'8SHB130161',ten:'MAGWSM-SP1',po:'#161987',sl:20016,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.24',ddh:'PC813-2511110001',ma:'8SHB990005',ten:'UH4CDPDV-SP',po:'#161987',sl:5040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.30',ddh:'PC813-2601150003',ma:'8SHB010065',ten:'SMS2WDA-SP',po:'#162243',sl:3000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.03.30',ddh:'PC813-2602120002',ma:'8SHB060036',ten:'iHW10-HL1',po:'#162348',sl:5088,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.02',ddh:'PC813-2512010001',ma:'8SHB130237',ten:'MAGWSM2-HL1',po:'#162087',sl:2040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.07',ddh:'PC813-2603060001',ma:'8SHB090002',ten:'SAU65-WP1',po:'#162257',sl:8008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.13',ddh:'PC813-2603090002',ma:'8SHB130235',ten:'SMS2ODVR-SP',po:'#162428',sl:7008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.13',ddh:'PC813-2512310001',ma:'KLSH000049',ten:'MPLT54L-2PKBP0',po:'#162242',sl:5000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.14',ddh:'PC813-2603040001',ma:'8SHB130211',ten:'MAGDM2',po:'#162506',sl:5775,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.16',ddh:'PC813-2511100003',ma:'8SHD130029',ten:'MP2FM-XCES0',po:'#162037',sl:1100,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.16',ddh:'PC813-2601020001',ma:'8SHB040036',ten:'UH5V3-HL1',po:'#162245',sl:2016,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.16',ddh:'PC813-2602120004',ma:'8SHB130215',ten:'MAGFMI',po:'#162403',sl:2000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.16',ddh:'PC813-2601210001',ma:'8SHB010041',ten:'VWDSM2-SP',po:'#162312',sl:3240,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.17',ddh:'PC813-2511110001',ma:'8SHB130195',ten:'MP2ODVM-XTSP',po:'#161987',sl:2016,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.17',ddh:'PC813-2603110002',ma:'8SHB060030',ten:'UHCUP2M-SP',po:'#162559',sl:1008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.21',ddh:'PC813-2602120004',ma:'8SHB130206',ten:'MAGDV-SP1',po:'#162403',sl:15000,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.21',ddh:'PC813-2603110002',ma:'8SHD130039',ten:'MP2AMPS-XC',po:'#162559',sl:1020,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.21',ddh:'PC813-2602130001',ma:'8SHB060040',ten:'GHVWD-SP',po:'#162405',sl:5040,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.23',ddh:'PC813-2603190002',ma:'8SHB130242',ten:'SMS2CD-SP',po:'#162612',sl:5016,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.27',ddh:'PC813-2603040003',ma:'8SHC130014',ten:'MAGDMB',po:'#162473',sl:5100,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.27',ddh:'PC813-2602120002',ma:'8SHV130009',ten:'MMWSM-RP',po:'#162348',sl:5040,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.27',ddh:'PC813-2512310001',ma:'8SHB130230',ten:'MEMSV-SP',po:'#162242',sl:1020,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.28',ddh:'PC813-2511110001',ma:'8SHB130192',ten:'MP2WD-XTSP',po:'#161987',sl:4032,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.28',ddh:'PC813-2602120003',ma:'8SHB130232',ten:'SMS2DV-SP1',po:'#162349',sl:10560,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.04.28',ddh:'PC813-2503120002',ma:'8SHB130196',ten:'MP2WDEX2-XTSP',po:'#160895',sl:1008,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.04',ddh:'PC813-2511210002',ma:'8SHB130230',ten:'MEMSV-SP',po:'#162080',sl:1020,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.04',ddh:'PC813-2511110001',ma:'8SHB040031',ten:'UH4DVM-SP',po:'#161987',sl:6528,nk:'Nguyễn Thị Yến',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.06',ddh:'PC813-260327002',ma:'J1TE000002',ten:'TRIMTB-重机支架R7-M22螺母CS302',po:'CS302-2603270004',sl:1000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:'',kh:'TRIMB'},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.11',ddh:'PC813-2603040002',ma:'8SHB130161',ten:'MAGWSM-SP1',po:'#162507',sl:20016,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.12',ddh:'PC813-2603180001',ma:'8SHB010067',ten:'MXMSWDA2HD-VA',po:'#162613',sl:6000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.12',ddh:'PC813-2602120001',ma:'8SHW130001',ten:'MMDSD-RP',po:'#162347',sl:2016,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.12',ddh:'PC813-2603110002',ma:'8SHB090002',ten:'SAU65-WP1',po:'#162559',sl:5000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.16',ddh:'PC813-2602120002',ma:'8SHV130011',ten:'MMWSM-MX',po:'#162348',sl:1008,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.16',ddh:'PC813-2603110002',ma:'8SHC130014',ten:'MAGDMB',po:'#162559',sl:5100,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.16',ddh:'PC813-2603180003',ma:'8SHV130009',ten:'MMWSM-RP',po:'#162607',sl:5520,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.22',ddh:'PC813-2601210002',ma:'8SHB130231',ten:'SMS2DV-SP',po:'#162244',sl:3040,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.22',ddh:'PC813-2601020001',ma:'8SHB130237',ten:'MAGWSM2-HL1',po:'#162245',sl:2040,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.22',ddh:'PC813-2603260001',ma:'8SHB130217',ten:'MP2DVM-SP1',po:'#162636',sl:15040,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.22',ddh:'PC813-2603260001',ma:'8SHB130206',ten:'MAGDV-SP1',po:'#162636',sl:20000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.25',ddh:'PC813-2604090003',ma:'8SHB010062',ten:'MAGWSM2',po:'#162713',sl:2040,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.25',ddh:'PC813-2604100001',ma:'8SHC130007',ten:'MAGFMB',po:'#162715',sl:1000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.26',ddh:'PC813-2604090001',ma:'8SHB010058',ten:'IHW10-SP1',po:'#162677',sl:50400,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:'sai kích thước palet'},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.26',ddh:'PC813-2604080001',ma:'8SHD010003',ten:'MXWDL-XCES0',po:'#162678',sl:1020,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.26',ddh:'PC813-2604080001',ma:'8SHD130034',ten:'MXWDL-2PXCES0',po:'#162678',sl:1020,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.05.26',ddh:'PC813-2603260002',ma:'8SHB130212',ten:'MAGFM',po:'#162637',sl:1000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.01',ddh:'PC813-2605120001',ma:'G4SH000072',ten:'HDGC25-UB',po:'#162325',sl:900,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.02',ddh:'PC813-2602130001',ma:'8SHD130031',ten:'MAGFM-2PXCES0',po:'#162405',sl:1000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.09',ddh:'PC813-2604080001',ma:'8SHB130214',ten:'MBM2SM',po:'#162678',sl:1024,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.10',ddh:'PC813-2605040002',ma:'S6SH000111',ten:'MPLTMSHD-BP0',po:'#162808',sl:1200,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.10',ddh:'PC813-2604090003',ma:'8SHB130193',ten:'MP2WD-SP1',po:'#162713',sl:5000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.12',ddh:'PC813-2604090001',ma:'8SHB010059',ten:'IHW10',po:'#162677',sl:25200,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.12',ddh:'PC813-2605040001',ma:'8SHB130239',ten:'MPLTMSPCH2-2PK',po:'#162806',sl:1056,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.12',ddh:'PC813-2605040001',ma:'8SHD010003',ten:'MXWDL-XCES0',po:'#162806',sl:1020,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.12',ddh:'PC813-2605040001',ma:'8SHW130001',ten:'MMDSD-RP',po:'#162806',sl:3024,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.17',ddh:'PC813-2604090001',ma:'8SHB010058',ten:'IHW10-SP1',po:'#162677',sl:25440,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.17',ddh:'PC813-2605150003',ma:'8SHB010065',ten:'SMS2WDA-SP',po:'#162806',sl:5400,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Tự kiểm',ngay:'2026.06.17',ddh:'PC813-2601210001',ma:'8SHW130002',ten:'MMDSD-RPMX1',po:'#162312',sl:7008,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+// === ELECOM BÊN THỨ 3 ===
+{kh:'ELECOM',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.01.16',ddh:'PC813-2512020001',ma:'8ELB130001',ten:'ELECOM P-DSMMWBK',po:'#PUO202505770',sl:2128,nk:'Lực',kq:'PASS',gc:''},
+{kh:'ELECOM',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.01.16',ddh:'PC813-2512020001',ma:'8ELB130003',ten:'ELECOM P-DSMMWPN',po:'#PUO202505770',sl:980,nk:'Vũ',kq:'PASS',gc:''},
+{kh:'ELECOM',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.01.16',ddh:'PC813-2512020001',ma:'8ELB130002',ten:'ELECOM P-DSMMWWH',po:'#PUO202505770',sl:1428,nk:'',kq:'PASS',gc:''},
+{kh:'ELECOM',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.15',ddh:'PC813-2603030001',ma:'8ELB040001',ten:'ELECOM P-CARS18BK',po:'#PUO202511403',sl:1620,nk:'',kq:'PASS',gc:''},
+{kh:'ELECOM',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.15',ddh:'PC813-2603030001',ma:'8ELC130001',ten:'ELECOM PWCARS18BK',po:'#PUO202511403',sl:1600,nk:'',kq:'PASS',gc:''},
+// === SCOSCHE BÊN THỨ 3 (file danh sách bên thứ 3) ===
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.04',ddh:'PC813-2601160001',ma:'8SHD130036',ten:'MXFM-XC',po:'#162239',sl:4006,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.04',ddh:'PC813-2601160001',ma:'8SHD010005',ten:'MXWSM-XC',po:'#162239',sl:4026,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.04',ddh:'PC813-2601160001',ma:'8SHD010006',ten:'MXWSM-2PKXC',po:'#162239',sl:3006,nk:'Mei',kq:'PASS',gc:'silicon trắng'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.05',ddh:'PC813-2601140001',ma:'8SHD060002',ten:'MRQTGAMPS-XC',po:'#161947',sl:526,nk:'Mei',kq:'FAIL',gc:'Thiếu dây, kẹp dây, fail 15V, thả rơi'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.05',ddh:'PC813-2601160001',ma:'8SHD130037',ten:'MXFM-2PKXC',po:'#162239',sl:3046,nk:'Mei',kq:'FAIL',gc:'mặt silicone loang trắng'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.05',ddh:'PC813-2601130001',ma:'8SHN060001',ten:'MRQTGAMPSPC-UB',po:'#161947',sl:1006,nk:'Mei',kq:'FAIL',gc:'fail 15V'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.05',ddh:'PC813-2601020006',ma:'S6SH000116',ten:'MXMS-20-UB',po:'#162129',sl:900,nk:'Văn',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.02.05',ddh:'PC813-2601020006',ma:'S6SH000117',ten:'MXMS-25-UB',po:'#162129',sl:900,nk:'Văn',kq:'PASS',gc:'pending điểm bơm nhựa đầu bi'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'PC813-2601290001',ma:'8SHD130038',ten:'SMS2CUPEX-XC',po:'#161947',sl:516,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.06',ddh:'PC813-2601220001',ma:'8SHA060001',ten:'MRQTG-20-UB 25W',po:'#161947',sl:500,nk:'',kq:'PASS',gc:'Pending k có dụng cụ đo nguồn 1 chiều'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.06',ddh:'PC813-2511110001',ma:'8SHB010058',ten:'IHW10-SP1',po:'#161987',sl:50400,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.06',ddh:'PC813-2601220001',ma:'8SHA060002',ten:'MRQTG-25-UB 25W',po:'#161947',sl:500,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.17',ddh:'PC813-2512310001',ma:'8SHD130032',ten:'MXDM-XCES0',po:'#162242',sl:3000,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.17',ddh:'PC813-2601150003',ma:'8SHB130193',ten:'MP2WD-SP1',po:'#162243',sl:6000,nk:'',kq:'FAIL',gc:'NG ngoại quan vaselin'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.17',ddh:'PC813-2601210002',ma:'8SHK130002',ten:'MMV-RPMX1',po:'#162244',sl:2016,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.24',ddh:'PC813-2602130002',ma:'8SHC130014',ten:'MAGDMB',po:'#162428',sl:3000,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.27',ddh:'PC813-2511110001',ma:'8SHB010064',ten:'SMS2WD2-SP1',po:'#161987',sl:15000,nk:'Nhất',kq:'PASS',gc:'Pending dán lệch tem trong'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.07',ddh:'PC813-2601140002',ma:'8SHA990003',ten:'PSMTGHDP-2PBP0',po:'#161738',sl:500,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.09',ddh:'PC813-2603100001',ma:'8SHB130236',ten:'SMS1CD',po:'#162347',sl:1008,nk:'Nam',kq:'FAIL',gc:'lỗi ngoại quan vượt AQL, Pending dán lệch tem trong'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.13',ddh:'PC813-2603160001',ma:'8SHB010067',ten:'MXMSWDA2HD-VA',po:'#162268',sl:512,nk:'Nhất',kq:'PENDING',gc:'lỗi vết xước 100% trên ốc kết nối'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.13',ddh:'PC813-2603160001',ma:'8SHB130241',ten:'MXMSCUPA2HD-VA',po:'#162268',sl:512,nk:'Nhất',kq:'PENDING',gc:'có vệt trắng mặt C bên trong khó lau'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603190001',ma:'8SHB130242',ten:'SMS2CD-SP',po:'#162428',sl:1518,nk:'Đức',kq:'PENDING',gc:'khác nhau giữa hộp màu và sách hướng dẫn'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603040001',ma:'8SHB060041',ten:'GHVWD',po:'#162506',sl:5040,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603040001',ma:'8SHB040032',ten:'P2M-SP',po:'#162506',sl:1512,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603100002',ma:'8SHD130040',ten:'MXMSAMPS-XC',po:'#161956',sl:1526,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603110001',ma:'8SHD130039',ten:'MP2AMPS-XC',po:'#162000',sl:1146,nk:'',kq:'FAIL',gc:'nắp mặt bong, Trừ 2% xuất hàng bt'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'PC813-2603100003',ma:'8SHD130040',ten:'MXMSAMPS-XC',po:'#162000',sl:1040,nk:'',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'PC813-2604100002',ma:'8SHB010064',ten:'SMS2WD2-SP1',po:'#162655',sl:12000,nk:'Văn',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000065',ten:'HDCUP25-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000070',ten:'HDSMB25-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000064',ten:'BMGC-25-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000063',ten:'HDDBC25-UB',po:'#162325',sl:900,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000066',ten:'HDB25AMPS-UB',po:'#162325',sl:900,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000067',ten:'HDDSA25M-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000068',ten:'HDDSA25S-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000072',ten:'HDGC25-UB',po:'#162325',sl:100,nk:'Mei',kq:'FAIL',gc:'NG ngoại quan, Trừ 2% xuất hàng bt'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000069',ten:'HDBBS25-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000071',ten:'HDBBS20-UB',po:'#162325',sl:1000,nk:'Mei',kq:'FAIL',gc:'via, Trừ 2% xuất hàng bt'},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.20',ddh:'PC813-2605120001',ma:'G4SH000073',ten:'HDBBF25-UB',po:'#162325',sl:1000,nk:'Mei',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.22',ddh:'PC813-2604280001',ma:'G4SH000059',ten:'0267MRQTR-20-UB',po:'#161947',sl:566,nk:'Nhất+Đức',kq:'PASS',gc:''},
+{kh:'Scosche',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.25',ddh:'PC813-2604280001',ma:'G4SH000060',ten:'0267MRQTR-25-UB',po:'#161947',sl:566,nk:'Nhất+Văn',kq:'PENDING',gc:'Pending 2 loại tape'},
+// === DORMAN BÊN THỨ 3 ===
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510391967',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:4230,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510395726',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510395726',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:3480,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510395726',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510396594',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:7350,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510397434',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510397879',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4020003426',ma:'8HSH140008',ten:'VN-FD2929M-FL-DM2',po:'BK820-0254-1',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4030020223-C',ma:'8HSH140007',ten:'VN-GMB524A-DM1',po:'74981',sl:240,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510388054',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:4230,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510388054',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:2490,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.05',ddh:'4510390601-VN',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:1020,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4020003426',ma:'8HSH140008',ten:'VN-FD2929M-FL-DM2',po:'BK820-0254-1',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4030020223-C',ma:'8HSH140007',ten:'74981 VN-GMB524A-DM1',po:'74981',sl:240,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510388054',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:4230,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510388054',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:2490,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:1020,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4020003426',ma:'8HSD140029',ten:'VN-FD2929M-FR-DM',po:'81701',sl:810,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4020003426',ma:'8HSD140028',ten:'VN-FD2929M-FL-DM',po:'81702',sl:1860,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4020003426',ma:'8HSD140030',ten:'VN-FD2929M-RR',po:'81703',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4020003426',ma:'8HSD140031',ten:'VN-FD2929M-RL',po:'81704',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510388054',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:660,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510388054',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:630,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140016',ten:'VN-GM3545M-RL-DM',po:'80105',sl:2940,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:660,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1560,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:1260,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140012',ten:'VN-GM3545M-FL-DM',po:'80546',sl:2580,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:2220,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSD140001',ten:'VN-FD2507MR-FL-DM',po:'90826',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSH140003',ten:'VN-GM3523A-TG1-DM1',po:'77488CD',sl:2490,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.07',ddh:'4510390601-VN',ma:'8HSH990001',ten:'VN-GM3545M-FRK-DM1',po:'80545CD',sl:2200,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510391967',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:4230,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510391967',ma:'8HSH140003',ten:'VN-GM3523A-TG1-DM1',po:'77488CD',sl:9960,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510392610',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1560,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510392610',ma:'8HSH140003',ten:'VN-GM3523A-TG1-DM1',po:'77488CD',sl:2490,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510392610',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:1160,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510393362',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:1050,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140016',ten:'VN-GM3545M-RL-DM',po:'80105',sl:1350,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:1380,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140012',ten:'VN-GM3545M-FL-DM',po:'80546',sl:3120,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:960,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:3120,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:3480,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510395726',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510396594',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:7350,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4020003561',ma:'8HSD140036',ten:'902-404 螺丝塞子-汽车配件-黄盒包装(越南)',po:'902-404',sl:4000,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510397434',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.09',ddh:'4510397879',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510399580',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:2580,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSD140022',ten:'VN-TY32465-FR-DM',po:'79345',sl:510,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1560,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:690,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSG140002',ten:'VN-GM5323A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401083',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM-A',po:'80374CD',sl:900,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510401876',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:3000,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510403061',ma:'8HSG140003',ten:'VN-GM5323A-FR-DM1',po:'77262',sl:1740,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510403061',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1560,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510403061',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:690,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510403061',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:690,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSH140005',ten:'VN-GM3523A-BZ-DM1',po:'76106',sl:2820,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:3600,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:750,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:4680,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:2250,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.11',ddh:'4510404278',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:690,nk:'',kq:'PASS',gc:''},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2025.12',ddh:'4020003757',ma:'8HSH140009',ten:'VN-CP14057-D-DM',po:'14057',sl:6000,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510410318',ma:'8HSH140005',ten:'VN-GM3523A-BZ-DM1',po:'76106',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4020003820',ma:'8HSA140003',ten:'VN-HP0008',po:'5047117',sl:4000,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4020003820',ma:'8HSH140010',ten:'VN-HP0003',po:'47094',sl:8040,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSH140005',ten:'VN-GM3523A-BZ-DM1',po:'76106',sl:1320,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSD140027',ten:'VN-GM3545P-FL-DM',po:'80117',sl:1020,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1560,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510412716',ma:'8HSD140001',ten:'VN-FD2507MR-FL-DM',po:'90826',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510414119',ma:'8HSH140005',ten:'VN-GM3523A-BZ-DM1',po:'76106',sl:840,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510414119',ma:'8HSG140002',ten:'VN-GM3523A-FL-DM1',po:'77261',sl:900,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510414119',ma:'8HSG140003',ten:'VN-GM3523A-FR-DM1',po:'77262',sl:900,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510414119',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:1650,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510414116',ma:'8HSA140003',ten:'VN-HP0008',po:'5047117',sl:5000,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510415873',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:600,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4030021901',ma:'8HSA140001',ten:'42359_VN-CP42359-PCV塑胶套-PE袋包装',po:'42359',sl:600,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510416591',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:300,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510417866',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:480,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510417866',ma:'8HSD140012',ten:'VN-GM3545M-FL-DM',po:'80546',sl:180,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510417866',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:960,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.03',ddh:'4510417866',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:2880,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510417866',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510418591',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:120,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510418591',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:240,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510419338',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510419338',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:150,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510419338',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:210,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510420102',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510420102',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:270,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510420102',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:960,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.03.26',ddh:'4510420102',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:240,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510420703',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510420703',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:180,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510420703',ma:'8HSD140012',ten:'VN-GM3545M-FL-DM',po:'80546',sl:240,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510420703',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:210,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510421520',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:120,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510421520',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:960,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510421520',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:60,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510422137',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:90,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.04.16',ddh:'4510422137',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:180,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510422845',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510422845',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:90,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510422845',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:180,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510423182',ma:'8HSH140006',ten:'VN-FD2929M-FL-DM1',po:'81702CD',sl:510,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510423182',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:1020,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510423182',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:360,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510424121',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:180,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510424121',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:960,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.14',ddh:'4510424121',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:360,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4020003942',ma:'8HSD140043',ten:'VN-HDJ310A',po:'927-951',sl:100,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4020003942',ma:'8HSD140052',ten:'VN-GMJ568A',po:'927-939',sl:100,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4020003942',ma:'8HSD140051',ten:'VN-GMJ566A',po:'927-936',sl:100,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4020003942',ma:'8HSD140050',ten:'VN-CRJ172S',po:'927-926',sl:100,nk:'',kq:'PASS',gc:'SI'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4510425449',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:420,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.05.28',ddh:'4510425449',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:270,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:570,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSH140002',ten:'VN-GM3545M-FL-DM1',po:'80546CD',sl:960,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSD140006',ten:'VN-GM2548A-FR-DM-A',po:'80375',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSG140001',ten:'VN-GM2548A-FL-DM1-A',po:'80374CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSD140005',ten:'VN-GM2548A-FL-DM-A',po:'80374',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510426310',ma:'8HSH140003',ten:'VN-GM3523A-TG1-DM1',po:'77488CD',sl:510,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510427058',ma:'8HSD140021',ten:'VN-GM3545M-RR-DM',po:'80547',sl:270,nk:'',kq:'PASS',gc:'SQRP'},
+{kh:'Dorman',hm:'Bên thứ 3 KH chỉ định',ngay:'2026.06.11',ddh:'4510427058',ma:'8HSD140014',ten:'VN-GM3545M-FRK-DM',po:'80545',sl:120,nk:'',kq:'PASS',gc:'SQRP'},
+// TRIMB
+{kh:'TRIMB',hm:'Tự kiểm',ngay:'2026.05.06',ddh:'PC813-260327002',ma:'J1TE000002',ten:'TRIMTB-重机支架R7-M22螺母CS302',po:'CS302-2603270004',sl:1000,nk:'Giáp Thị Huyền Trang',kq:'PASS',gc:''},
+];
+
+function loadData(){
+  const s=localStorage.getItem('inspData2');
+  if(s){data=JSON.parse(s);nextId=Math.max(...data.map(r=>r.id),0)+1;}
+  else{data=initData.map((r,i)=>({...r,id:i+1}));nextId=data.length+1;saveData();}
+}
+function saveData(){localStorage.setItem('inspData2',JSON.stringify(data));}
+
+function buildKHF(){
+  const khs=[...new Set(data.map(r=>r.kh))].sort();
+  const s=document.getElementById('fKH');
+  s.innerHTML='<option value="">-- Tất cả KH --</option>';
+  khs.forEach(k=>{const o=document.createElement('option');o.value=o.textContent=k;s.appendChild(o);});
+}
+
+function applyFilters(){
+  const s=document.getElementById('fS').value.toLowerCase();
+  const kh=document.getElementById('fKH').value;
+  const hm=document.getElementById('fHM').value;
+  const kq=document.getElementById('fKQ').value;
+  const th=document.getElementById('fTH').value;
+  const nam=document.getElementById('fNAM').value;
+  filtered=data.filter(r=>{
+    if(kh&&r.kh!==kh)return false;
+    if(hm&&r.hm!==hm)return false;
+    if(kq&&r.kq.toUpperCase()!==kq)return false;
+    if(th&&!r.ngay.includes(th))return false;
+    if(nam&&!r.ngay.startsWith(nam))return false;
+    if(s&&!`${r.ma} ${r.ten} ${r.po} ${r.ddh} ${r.nk} ${r.kh}`.toLowerCase().includes(s))return false;
+    return true;
+  });
+  sortF();renderTable();updateStats();
+}
+function clearFilters(){
+  ['fS','fKH','fHM','fKQ','fTH','fNAM'].forEach(id=>{const e=document.getElementById(id);e.value='';});
+  applyFilters();
+}
+function sb(col){
+  if(sCol===col)sDir*=-1;else{sCol=col;sDir=1;}
+  sortF();renderTable();
+  document.querySelectorAll('.sa').forEach(e=>e.textContent='');
+  const el=document.getElementById('s_'+col);if(el)el.textContent=sDir===1?' ▲':' ▼';
+}
+function sortF(){
+  filtered.sort((a,b)=>{
+    let va=a[sCol],vb=b[sCol];
+    if(sCol==='sl')return(va-vb)*sDir;
+    return String(va||'').localeCompare(String(vb||''),'vi')*sDir;
+  });
+}
+function renderTable(){
+  const tb=document.getElementById('tb'),nd=document.getElementById('nd');
+  if(!filtered.length){tb.innerHTML='';nd.style.display='block';document.getElementById('rowCount').textContent='0 bản ghi';return;}
+  nd.style.display='none';
+  document.getElementById('rowCount').textContent=`${filtered.length} / ${data.length} bản ghi`;
+  let stt=1;
+  tb.innerHTML=filtered.map(r=>{
+    const kc=r.kq==='PASS'?'pass':r.kq==='FAIL'?'fail':'pend';
+    const rc=r.kq==='FAIL'?'rf':r.kq==='PENDING'?'rp':'';
+    const hc=r.hm==='Tự kiểm'?'btk':r.hm==='Bên thứ 3 KH chỉ định'?'b3rd':'bqc';
+    const extraTip=r.extra&&r.extra.length?r.extra.map(e=>`${e.k}: ${e.v}`).join(' | '):'';
+    return `<tr class="${rc}" id="row_${r.id}">
+      <td class="cb-col admin-col"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="updateBulkBar()"></td>
+      <td>${stt++}</td>
+      <td style="white-space:nowrap;font-size:11px">${r.ngay||'—'}</td>
+      <td><b>${r.kh}</b></td>
+      <td><span class="badge ${hc}">${r.hm}</span></td>
+      <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.ddh||''}">${r.ddh||''}</td>
+      <td><code style="font-size:11px">${r.ma}</code></td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.ten}">${r.ten}</td>
+      <td style="font-size:11px">${r.po||''}</td>
+      <td style="text-align:right">${(r.sl||0).toLocaleString()}</td>
+      <td>${r.nk||'—'}</td>
+      <td><span class="badge b${kc}">${r.kq}</span></td>
+      <td style="font-size:11px;max-width:130px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.gc||'')+( extraTip?' | '+extraTip:'')}">${r.gc||''}${extraTip?` <span style="color:#7b1fa2;font-size:10px">[+${r.extra.length}]</span>`:''}</td>
+      <td style="white-space:nowrap" class="admin-col">
+        <button class="ab acl" onclick="cloneRec(${r.id})" title="Nhân bản">⧉</button>
+        <button class="ab ae" onclick="openEdit(${r.id})">✏️</button>
+        <button class="ab ad" onclick="confirmDel(${r.id})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('cbAll').checked=false;
+}
+function updateStats(){
+  const t=filtered.length,ps=filtered.filter(r=>r.kq==='PASS').length,
+    fl=filtered.filter(r=>r.kq==='FAIL').length,pd=filtered.filter(r=>r.kq==='PENDING').length,
+    sl=filtered.reduce((s,r)=>s+(r.sl||0),0);
+  const curKQ=document.getElementById('fKQ').value;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="sc${curKQ===''?' act':''}" onclick="filterByStat('')"><div class="n">${t}</div><div class="l">Tổng bản ghi</div></div>
+    <div class="sc pass${curKQ==='PASS'?' act':''}" onclick="filterByStat('PASS')"><div class="n">${ps}</div><div class="l">✅ PASS</div></div>
+    <div class="sc fail${curKQ==='FAIL'?' act':''}" onclick="filterByStat('FAIL')"><div class="n">${fl}</div><div class="l">❌ FAIL</div></div>
+    <div class="sc pend${curKQ==='PENDING'?' act':''}" onclick="filterByStat('PENDING')"><div class="n">${pd}</div><div class="l">⏳ PENDING</div></div>
+    <div class="sc${curKQ===''?' act':''}" onclick="filterByStat('')"><div class="n">${sl.toLocaleString()}</div><div class="l">Tổng SL</div></div>
+    <div class="sc pass${curKQ==='PASS'?' act':''}" onclick="filterByStat('PASS')"><div class="n">${t?Math.round(ps/t*100):0}%</div><div class="l">Tỉ lệ PASS</div></div>`;
+}
+function filterByStat(kq){
+  const sel=document.getElementById('fKQ');
+  // bấm lại vào thẻ đang lọc -> bỏ lọc
+  sel.value=(sel.value===kq)?'':kq;
+  applyFilters();
+}
+
+// FORM
+function openAdd(){
+  editId=null;
+  document.getElementById('mTitle').textContent='➕ Thêm bản ghi mới';
+  ['fi_ngay','fi_kh','fi_ddh','fi_ma','fi_ten','fi_po','fi_sl','fi_nk','fi_gc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fi_hm').value='Tự kiểm';
+  document.getElementById('fi_hm_other').style.display='none';
+  document.getElementById('fi_kq').value='PASS';
+  document.getElementById('fi_kq_other').style.display='none';
+  document.getElementById('customFields').innerHTML='';
+  document.getElementById('fModal').classList.add('act');
+}
+function openEdit(id){
+  const r=data.find(x=>x.id===id);if(!r)return;
+  const doEdit=()=>{
+    editId=id;
+    document.getElementById('mTitle').textContent='✏️ Chỉnh sửa bản ghi';
+    document.getElementById('fi_ngay').value=r.ngay||'';
+    document.getElementById('fi_kh').value=r.kh||'';
+    const hmSel=document.getElementById('fi_hm');
+    const hmOpts=['Tự kiểm','Bên thứ 3 KH chỉ định','QC khách hàng'];
+    if(hmOpts.includes(r.hm)){hmSel.value=r.hm;document.getElementById('fi_hm_other').style.display='none';}
+    else{hmSel.value='__other__';document.getElementById('fi_hm_other').style.display='block';document.getElementById('fi_hm_other').value=r.hm||'';}
+    document.getElementById('fi_ddh').value=r.ddh||'';
+    document.getElementById('fi_ma').value=r.ma||'';
+    document.getElementById('fi_ten').value=r.ten||'';
+    document.getElementById('fi_po').value=r.po||'';
+    document.getElementById('fi_sl').value=r.sl||'';
+    document.getElementById('fi_nk').value=r.nk||'';
+    const kqSel=document.getElementById('fi_kq');
+    const kqOpts=['PASS','FAIL','PENDING'];
+    if(kqOpts.includes(r.kq)){kqSel.value=r.kq;document.getElementById('fi_kq_other').style.display='none';}
+    else{kqSel.value='__other__';document.getElementById('fi_kq_other').style.display='block';document.getElementById('fi_kq_other').value=r.kq||'';}
+    document.getElementById('fi_gc').value=r.gc||'';
+    // load custom fields
+    const cf=document.getElementById('customFields');cf.innerHTML='';
+    if(r.extra){r.extra.forEach(e=>addCustomField(e.k,e.v));}
+    document.getElementById('fModal').classList.add('act');
+  };
+  if(adminMode){doEdit();}else{pwdCb=doEdit;openPwd();}
+}
+function saveRec(){
+  const extra=[];
+  document.querySelectorAll('.cf-row').forEach(row=>{
+    const k=row.querySelector('.cf-key').value.trim();
+    const v=row.querySelector('.cf-val').value.trim();
+    if(k)extra.push({k,v});
+  });
+  const rec={id:editId||nextId++,
+    ngay:document.getElementById('fi_ngay').value.trim(),
+    kh:document.getElementById('fi_kh').value.trim(),
+    hm:(()=>{const s=document.getElementById('fi_hm');return s.value==='__other__'?document.getElementById('fi_hm_other').value.trim()||'Tự kiểm':s.value;})(),
+    ddh:document.getElementById('fi_ddh').value.trim(),
+    ma:document.getElementById('fi_ma').value.trim(),
+    ten:document.getElementById('fi_ten').value.trim(),
+    po:document.getElementById('fi_po').value.trim(),
+    sl:parseInt(document.getElementById('fi_sl').value)||0,
+    nk:document.getElementById('fi_nk').value.trim(),
+    kq:(()=>{const s=document.getElementById('fi_kq');return s.value==='__other__'?document.getElementById('fi_kq_other').value.trim()||'PENDING':s.value;})(),
+    gc:document.getElementById('fi_gc').value.trim(),
+    extra:extra.length?extra:undefined};
+  if(!rec.ma||!rec.kh){alert('Vui lòng nhập Khách hàng và Mã hàng!');return;}
+  if(editId){const i=data.findIndex(x=>x.id===editId);if(i>-1)data[i]=rec;}
+  else data.push(rec);
+  saveData();buildKHF();applyFilters();closeM('fModal');
+}
+function confirmDel(id){
+  const doDel=()=>{if(!confirm('Xác nhận xóa bản ghi này?'))return;
+    data=data.filter(x=>x.id!==id);saveData();buildKHF();applyFilters();};
+  if(adminMode){doDel();}else{pwdCb=doDel;openPwd();}
+}
+
+// CUSTOM SELECT TOGGLE
+function toggleCustomHM(sel){
+  const inp=document.getElementById('fi_hm_other');
+  inp.style.display=sel.value==='__other__'?'block':'none';
+  if(sel.value==='__other__')setTimeout(()=>inp.focus(),50);
+}
+function toggleCustomKQ(sel){
+  const inp=document.getElementById('fi_kq_other');
+  inp.style.display=sel.value==='__other__'?'block':'none';
+  if(sel.value==='__other__')setTimeout(()=>inp.focus(),50);
+}
+
+// ADMIN SESSION
+function toggleAdmin(){
+  if(adminMode){
+    adminMode=false;
+    document.getElementById('adminBadge').textContent='🔒 Admin';
+    document.getElementById('adminBadge').classList.remove('on');
+    document.querySelector('table').classList.remove('admin-on');
+    document.getElementById('bulkBar').classList.remove('show');
+    return;
+  }
+  pwdCb=()=>{
+    adminMode=true;
+    document.getElementById('adminBadge').textContent='🔓 Admin (ON)';
+    document.getElementById('adminBadge').classList.add('on');
+    document.querySelector('table').classList.add('admin-on');
+  };
+  openPwd();
+}
+
+// BULK SELECT
+function updateBulkBar(){
+  const cbs=document.querySelectorAll('.row-cb:checked');
+  const bar=document.getElementById('bulkBar');
+  if(cbs.length>0){bar.classList.add('show');document.getElementById('bulkCount').textContent=`${cbs.length} dòng đã chọn`;}
+  else{bar.classList.remove('show');}
+}
+function toggleAll(checked){
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=checked);
+  updateBulkBar();
+}
+function clearSelection(){
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=false);
+  document.getElementById('cbAll').checked=false;
+  document.getElementById('bulkBar').classList.remove('show');
+}
+function bulkDelete(){
+  const ids=[...document.querySelectorAll('.row-cb:checked')].map(cb=>parseInt(cb.dataset.id));
+  if(!ids.length)return;
+  const doBulkDel=()=>{
+    if(!confirm(`Xác nhận xóa ${ids.length} bản ghi đã chọn?`))return;
+    data=data.filter(r=>!ids.includes(r.id));
+    saveData();buildKHF();applyFilters();
+    document.getElementById('bulkBar').classList.remove('show');
+  };
+  if(adminMode){doBulkDel();}else{pwdCb=doBulkDel;openPwd();}
+}
+
+// CLONE
+function cloneRec(id){
+  const r=data.find(x=>x.id===id);if(!r)return;
+  const doClone=()=>{
+    const newR={...r,id:nextId++,ngay:'',gc:(r.gc?r.gc+' ':'')+'[clone]'};
+    data.push(newR);saveData();buildKHF();applyFilters();
+    // open edit for the new clone
+    setTimeout(()=>openEdit(newR.id),100);
+  };
+  if(adminMode){doClone();}else{pwdCb=doClone;openPwd();}
+}
+
+// CUSTOM FIELDS
+function addCustomField(k='',v=''){
+  const cf=document.getElementById('customFields');
+  const row=document.createElement('div');row.className='cf-row';
+  row.innerHTML=`<input class="cf-key" placeholder="Tên trường (vd: Màu sắc)" value="${k}"><input class="cf-val" placeholder="Giá trị" value="${v}"><button class="cf-del" onclick="this.parentNode.remove()">✕</button>`;
+  cf.appendChild(row);
+}
+
+// PWD
+function openPwd(){document.getElementById('pi').value='';document.getElementById('pe').textContent='';document.getElementById('pModal').classList.add('act');setTimeout(()=>document.getElementById('pi').focus(),100);}
+function chkPwd(){
+  if(document.getElementById('pi').value===PWD){closeM('pModal');if(pwdCb){pwdCb();pwdCb=null;}}
+  else document.getElementById('pe').textContent='❌ Sai mật khẩu!';
+}
+function closeM(id){document.getElementById(id).classList.remove('act');}
+
+// IMPORT / EXPORT
+function openImport(){document.getElementById('iText').value='';document.getElementById('iModal').classList.add('act');}
+function doImport(){
+  const lines=document.getElementById('iText').value.trim().split('\n');
+  let c=0;
+  lines.forEach(line=>{
+    const cols=line.split(/\t|\|/).map(x=>x.trim());
+    if(cols.length<6)return;
+    data.push({id:nextId++,ngay:cols[0]||'',kh:cols[1]||'',hm:cols[2]||'Tự kiểm',
+      ddh:cols[3]||'',ma:cols[4]||'',ten:cols[5]||'',po:cols[6]||'',
+      sl:parseInt(cols[7])||0,nk:cols[8]||'',kq:(cols[9]||'PASS').toUpperCase(),gc:cols[10]||''});c++;
+  });
+  saveData();buildKHF();applyFilters();closeM('iModal');alert(`✅ Đã import ${c} bản ghi!`);
+}
+function exportCSV(){
+  const h='STT,Ngày tháng,Khách hàng,Hạng mục kiểm,Đơn đặt hàng,Mã hàng,Tên hàng,PO,Số lượng,Người kiểm,Kết quả,Ghi chú';
+  const rows=filtered.map((r,i)=>[i+1,r.ngay,r.kh,r.hm,r.ddh,r.ma,r.ten,r.po,r.sl,r.nk,r.kq,`"${r.gc||''}"`].join(','));
+  const csv='\uFEFF'+[h,...rows].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`KiemHang_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// INIT
+loadData();buildKHF();applyFilters();
+</script>
+</body>
+</html>

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quản lý hiệu chuẩn thiết bị đo</title>
+<style>
+:root{
+  --font-sans:"Segoe UI",Tahoma,Arial,sans-serif;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f8f9fa;
+  --color-text-primary:#1f2937;
+  --color-text-secondary:#6b7280;
+  --color-border-primary:#e5e7eb;
+  --color-border-secondary:#e5e7eb;
+  --color-border-tertiary:#f1f3f5;
+  --border-radius-md:12px;
+  --green-dark:#374151;
+  --green-mid:#4b5563;
+  --green-light:#ffffff;
+  --green-card:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:#f3f4f6;padding:20px}
+.wrap{background:var(--green-light);max-width:1600px;margin:auto;padding:24px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);border:1px solid #e5e7eb}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;background:#ffffff;margin:-24px -24px 16px -24px;padding:16px 24px;border-radius:16px 16px 0 0;color:#1f2937;border-bottom:1px solid #e5e7eb}
+.page-title{font-size:18px;font-weight:600;color:#1f2937}
+.admin-bar{display:flex;align-items:center;gap:8px}
+.btn-admin{padding:6px 14px;border-radius:8px;border:1px solid #d1d5db;background:#ffffff;cursor:pointer;font-size:13px;color:#374151}
+.btn-admin.active{background:#374151;color:#ffffff;border-color:#374151}
+.btn-add{padding:7px 16px;border-radius:8px;border:1px solid #d1d5db;background:#374151;color:#ffffff;cursor:pointer;font-size:13px;font-weight:600;display:none}
+.btn-add.show{display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.stat{background:var(--green-card);border:1px solid var(--color-border-primary);box-shadow:0 1px 4px rgba(0,0,0,.04);border-radius:var(--border-radius-md);padding:.75rem 1rem;cursor:pointer;transition:all .15s}
+.stat:hover{border-color:#9ca3af;box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+.stat.active-stat{border-color:#374151;box-shadow:0 0 0 2px rgba(55,65,81,.15)}
+.stat-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.stat-val.warn{color:#BA7517}.stat-val.danger{color:#A32D2D}.stat-val.ok{color:#2d6a2d}
+.tab-bar{display:flex;gap:4px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border:1px solid var(--color-border-primary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;background:white;color:var(--green-mid);transition:all .15s}
+.tab.active{background:var(--green-dark);color:white;border-color:var(--green-dark)}
+.top-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.search-box{flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:14px;background:white;color:var(--color-text-primary)}
+select{padding:7px 10px;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:white;color:var(--color-text-primary);cursor:pointer}
+.btn-clear{padding:7px 14px;border-radius:var(--border-radius-md);border:1px solid #e0a0a0;background:#fdf0f0;color:#A32D2D;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
+.btn-clear:hover{background:#fae0e0}
+.section{margin-bottom:1.5rem}
+.sec-header{display:flex;align-items:center;gap:8px;padding:.5rem 0;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:.5rem;cursor:pointer;user-select:none}
+.sec-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.sec-count{font-size:12px;color:var(--color-text-secondary);background:var(--green-card);padding:2px 8px;border-radius:20px;border:1px solid var(--color-border-primary)}
+.chevron{font-size:14px;color:var(--color-text-secondary);transition:transform .2s;margin-left:auto}
+.chevron.open{transform:rotate(180deg)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;z-index:10;background:#f3f4f6!important;color:#374151!important;font-weight:600;padding:7px 8px;text-align:left;white-space:nowrap;font-size:12px;border-bottom:1px solid #e5e7eb}
+td{padding:7px 8px;border-bottom:.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top;word-break:break-word}
+tr:nth-child(even) td{background:#fafafa}
+tr:hover td{background:#f1f3f5}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-ok{background:#EAF3DE;color:#3B6D11}
+.badge-warn{background:#FAEEDA;color:#854F0B}
+.badge-danger{background:#FCEBEB;color:#A32D2D}
+.badge-dead{background:#F1EFE8;color:#5F5E5A}
+.badge-inactive{background:#E6F1FB;color:#185FA5}
+.dup-badge{background:#FAEEDA;color:#854F0B;padding:2px 7px;border-radius:20px;font-size:11px;margin-left:4px}
+.no-data{color:var(--color-text-secondary);font-size:13px;padding:1rem 0;text-align:center}
+/* action buttons in rows */
+.row-actions{display:flex;gap:4px;white-space:nowrap}
+.btn-row{padding:3px 8px;border:1px solid var(--color-border-secondary);border-radius:6px;cursor:pointer;font-size:11px;background:white}
+.btn-row.edit{color:var(--green-dark);border-color:var(--color-border-primary)}
+.btn-row.clone{color:#7c3aed;border-color:#ddd6fe}
+.btn-row.del{color:#dc2626;border-color:#fecaca}
+.btn-row:hover{opacity:.8}
+/* floating */
+.floating-tools{position:fixed;right:20px;bottom:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.floating-tools button{padding:10px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;background:var(--green-dark);color:white}
+.floating-tools button:hover{background:#1f4f1f}
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:white;border-radius:16px;padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;color:#1f2937}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:#64748b;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;color:#1f2937;background:white}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--green-dark);box-shadow:0 0 0 2px rgba(45,106,45,.15)}
+.form-group textarea{resize:vertical;min-height:56px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.btn-cancel{padding:8px 18px;border:1px solid #cbd5e1;border-radius:8px;background:white;cursor:pointer;font-size:13px}
+.btn-save{padding:8px 18px;border:none;border-radius:8px;background:var(--green-dark);color:white;cursor:pointer;font-size:13px;font-weight:500}
+.btn-save:hover{background:#1f4f1f}
+/* password modal */
+.pw-modal{width:360px}
+.pw-modal input{width:100%;margin-top:8px}
+.pw-error{color:#dc2626;font-size:12px;margin-top:4px;display:none}
+/* notification */
+.notif-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10001;align-items:center;justify-content:center}
+.notif-overlay.show{display:flex}
+.notif-box{background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.notif-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.notif-item{padding:8px 0;border-bottom:.5px solid #f1f5f9;font-size:13px}
+.notif-item:last-child{border-bottom:none}
+.save-time{font-size:11px;color:#94a3b8;text-align:right;margin-top:8px}
+#saveTimeLabel{color:#d7ecd0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">📋 Quản lý hiệu chuẩn thiết bị đo</div>
+    <div class="admin-bar">
+      <span id="saveTimeLabel" class="save-time"></span>
+      <button class="btn-add" id="btnAdd" onclick="openAdd()">+ Thêm thiết bị</button>
+      <button class="btn-admin" id="btnAdminToggle" onclick="toggleAdmin()">🔒 Chế độ Admin</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="setTab('all')">Tất cả</button>
+    <button class="tab" onclick="setTab('dot')">Theo đợt HC</button>
+    <button class="tab" onclick="setTab('loai')">Theo loại</button>
+    <button class="tab" onclick="setTab('bp')">Theo bộ phận</button>
+    <button class="tab" onclick="setTab('dup')">Trùng mã</button>
+  </div>
+
+  <div class="top-bar">
+    <input class="search-box" id="searchBox" placeholder="Tìm kiếm tên, mã, serial, người phụ trách..." oninput="render()">
+    <select id="filterStatus" onchange="render()">
+      <option value="">Tất cả trạng thái</option>
+      <option value="active">Đang dùng</option>
+      <option value="inactive">Không sử dụng</option>
+      <option value="dead">Báo phế</option>
+    </select>
+    <select id="filterDot" onchange="render()"><option value="">Tất cả đợt</option></select>
+    <select id="filterLoai" onchange="render()"><option value="">Tất cả loại</option></select>
+    <button class="btn-clear" onclick="clearFilters()">✕ Xóa lọc</button>
+  </div>
+
+  <div id="main"></div>
+  <div class="save-time" id="saveTimeBottom"></div>
+</div>
+
+<!-- Floating tools -->
+<div class="floating-tools">
+  <button onclick="exportHtml()">📤 Xuất HTML</button>
+  <button onclick="document.getElementById('importFile').click()">📥 Nhập HTML</button>
+  <input type="file" id="importFile" style="display:none" onchange="importHtml(event)">
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal pw-modal">
+    <div class="modal-title">🔑 Đăng nhập Admin</div>
+    <div class="form-group">
+      <label>Mật khẩu</label>
+      <input type="password" id="pwInput" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')checkPw()">
+      <div class="pw-error" id="pwError">Mật khẩu không đúng!</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('pwModal')">Hủy</button>
+      <button class="btn-save" onclick="checkPw()">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title" id="editModalTitle">Thêm thiết bị mới</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Tên thiết bị (VN) *</label>
+        <input type="text" id="f_name" placeholder="VD: Thước kẹp điện tử">
+      </div>
+      <div class="form-group">
+        <label>Mã thiết bị *</label>
+        <input type="text" id="f_ma" placeholder="VD: CM-KC-030">
+      </div>
+      <div class="form-group">
+        <label>Model / Quy cách</label>
+        <input type="text" id="f_model" placeholder="VD: 0-150mm">
+      </div>
+      <div class="form-group">
+        <label>Bộ phận</label>
+        <select id="f_bp">
+          <option value="Chất lượng">Chất lượng</option>
+          <option value="Ép nhựa">Ép nhựa</option>
+          <option value="Lắp ráp">Lắp ráp</option>
+          <option value="Kho">Kho</option>
+          <option value="Công trình">Công trình</option>
+          <option value="Hành chính">Hành chính</option>
+          <option value="Gia công kim loại">Gia công kim loại</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Trạng thái</label>
+        <select id="f_tt">
+          <option value="active">Đang sử dụng</option>
+          <option value="inactive">Không sử dụng</option>
+          <option value="dead">Báo phế</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ngày HC gần nhất (YYYY/MM/DD)</label>
+        <input type="text" id="f_hc" placeholder="VD: 2026/04/10">
+      </div>
+      <div class="form-group">
+        <label>HC tiếp theo (YYYY/MM/DD)</label>
+        <input type="text" id="f_next" placeholder="VD: 2027/04/10">
+      </div>
+      <div class="form-group">
+        <label>Người phụ trách</label>
+        <input type="text" id="f_ptr" placeholder="VD: Nguyễn Văn Bản">
+      </div>
+      <div class="form-group">
+        <label>Serial</label>
+        <input type="text" id="f_serial" placeholder="">
+      </div>
+      <div class="form-group">
+        <label>Nhà sản xuất</label>
+        <input type="text" id="f_nsx" placeholder="VD: Mitutoyo">
+      </div>
+      <div class="form-group">
+        <label>Ngày mua</label>
+        <input type="text" id="f_mua" placeholder="VD: 2026/01">
+      </div>
+      <div class="form-group full">
+        <label>Ghi chú</label>
+        <textarea id="f_note" placeholder="Ghi chú thêm..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('editModal')">Hủy</button>
+      <button class="btn-save" onclick="saveDevice()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="notif-overlay" id="notifModal">
+  <div class="notif-box">
+    <div class="notif-title">🔔 Cảnh báo hiệu chuẩn</div>
+    <div id="notifContent"></div>
+    <div class="modal-footer">
+      <button class="btn-save" onclick="closeModal('notifModal')">Đã hiểu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────
+const TODAY = new Date(); TODAY.setHours(0,0,0,0); // Tự động lấy ngày thực của máy tính
+const WARN_DAYS = 20;
+const ADMIN_PASS = '123456';
+const LS_KEY = 'calibration_data_v2';
+const LS_TIME = 'calibration_save_time';
+let isAdmin = false;
+let editingId = null; // null = add, else = id of row being edited
+
+// ─── Raw default data ─────────────────────────────────────────────
+const defaultRaw1=[
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-001',model:'300mm',mua:'2022',nsx:'DELI',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 15cm',ma:'CM-ZC-002',model:'150mm',mua:'2022',nsx:'DELI',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 15cm',ma:'CM-ZC-003',model:'150mm',mua:'2022',nsx:'DELI',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẹp điện tử',ma:'CM-KC-015',model:'0-150mm',mua:'2/22/2025',nsx:'Mitutoyo',bp:'Công trình',hc:'2026/04/10',next:'2027/04/10',ptr:'Gary Fu',tt:'active',note:'',serial:'0103678'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-016',model:'0-300mm',mua:'2/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'B24111695'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-019',model:'0-300mm',mua:'2/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'0103683'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-020',model:'0-150mm',mua:'1/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'a bản',serial:'B24111419'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-021',model:'0-150mm',mua:'1/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'B24111664'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-017',model:'0-200mm',mua:'26/12/2024',nsx:'GuangLu',bp:'Ép nhựa',hc:'2026/04/10',next:'2027/04/10',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'K17D056425'},
+{name:'Dưỡng đo ren ngoài M2',ma:'CM-HG-001',model:'M2',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M2.5',ma:'CM-HG-002',model:'M2.5',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M3',ma:'CM-HG-003',model:'M3',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M4',ma:'CM-HG-004',model:'M4',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M5',ma:'CM-HG-005',model:'M5',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M2',ma:'CM-SG-001',model:'M2',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M2.5',ma:'CM-SG-002',model:'M2.5',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M3',ma:'CM-SG-003',model:'M3',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M4',ma:'CM-SG-004',model:'M4',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M5',ma:'CM-SG-005',model:'M5',mua:'04/2024',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài 1/4-20',ma:'CM-HG-006',model:'1/4-20',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài 3/8-24',ma:'CM-HG-007',model:'3/8-24',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài 5/16-18',ma:'CM-HG-008',model:'5/16-18',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M6*P1.0',ma:'CM-HG-009',model:'M6*P1.0',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M8*P1.25',ma:'CM-HG-010',model:'M8*P1.25',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài 5/16-24',ma:'CM-HG-011',model:'5/16-24',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong 1/4-20',ma:'CM-SG-006',model:'1/4-20',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong 3/8-24',ma:'CM-SG-007',model:'3/8-24',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong 5/16-18',ma:'CM-SG-008',model:'5/16-18',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M6*P1.0',ma:'CM-SG-009',model:'M6*P1.0',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M8*P1.25',ma:'CM-SG-010',model:'M8*P1.25',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong 5/16-24',ma:'CM-SG-011',model:'5/16-24',mua:'07/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren ngoài M10',ma:'CM-HG-012',model:'M10',mua:'08/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Dưỡng đo ren trong M10',ma:'CM-SG-012',model:'M10',mua:'08/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Máy kiểm tra độ uốn dây',ma:'CM-WZ-001',model:'',mua:'12/2025',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Máy kiểm tra tuổi thọ rút cắm',ma:'CM-CB-001',model:'',mua:'01/04/2026',nsx:'',bp:'Chất lượng',hc:'2026/04/10',next:'2027/04/10',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'LH2602279'},
+{name:'Cân điện tử ALH4-15kg',ma:'CM-DZB-025',model:'ALH4-15kg',mua:'2026/04',nsx:'EXCELL',bp:'Lắp ráp',hc:'2026/04/10',next:'2027/04/10',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'A25400065'},
+{name:'Máy quét mã NLS-PT86',ma:'CM-SM-004',model:'NLS-PT86',mua:'2026/04',nsx:'Newland',bp:'Lắp ráp',hc:'2026/04/10',next:'2027/04/10',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'PT86-30-FC00635'},
+{name:'Máy đo nhiệt độ tiếp xúc TM-321N',ma:'CM-JC-005',model:'TM-321N',mua:'2022',nsx:'Tenmars',bp:'Ép nhựa',hc:'2025/07/05',next:'2026/07/05',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'211104673'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-009',model:'0-200mm',mua:'20/3/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'mai hương',serial:'23083378'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-010',model:'0-200mm',mua:'20/3/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'LY',serial:'23087424'},
+{name:'Máy đo lực siết vít HP-50',ma:'CM-LNC-001',model:'HP-50',mua:'2022/01',nsx:'',bp:'Lắp ráp',hc:'2025/07/05',next:'2026/07/05',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'895840'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-011',model:'0-150mm',mua:'20/6/2025',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'mai hương',serial:'23156647'},
+{name:'Bộ đo khối 47 chi tiết',ma:'CM-KG-001',model:'47 chi tiết',mua:'24/5/2024',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'221651'},
+{name:'Thước đo chiều cao',ma:'CM-GD-011',model:'0-150mm',mua:'6/5/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-004',model:'300mm',mua:'2024/06',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-007',model:'300mm',mua:'2024/06',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 100cm',ma:'CM-ZC-005',model:'1000mm',mua:'2024/06',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 100cm',ma:'CM-ZC-006',model:'1000mm',mua:'2024/06',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước cuộn 5m',ma:'CM-JCH-001',model:'5000mm',mua:'',nsx:'',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:''},
+{name:'Thước kẹp điện tử',ma:'CM-KC-022',model:'0-1000mm',mua:'15/5/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/07/05',next:'2026/07/05',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'0029496'},
+{name:'Máy đo nhiệt độ tiếp xúc TM-321N',ma:'CM-JC-007',model:'TM-321N',mua:'2025/06',nsx:'Tenmars',bp:'Lắp ráp',hc:'2025/07/05',next:'2026/07/05',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Thước kẹp điện tử',ma:'CM-KC-023',model:'0-200mm',mua:'3/25/2025',nsx:'Mitutoyo',bp:'Công trình',hc:'2025/07/05',next:'2026/07/05',ptr:'Gary Fu',tt:'active',note:'',serial:'B25012818'},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-011',model:'300mm',mua:'3/25/2025',nsx:'',bp:'Công trình',hc:'2025/07/05',next:'2026/07/05',ptr:'Gary Fu',tt:'active',note:'',serial:''},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-012',model:'300mm',mua:'3/25/2025',nsx:'',bp:'Công trình',hc:'2025/07/05',next:'2026/07/05',ptr:'Gary Fu',tt:'active',note:'',serial:''},
+{name:'Máy quét mã vạch NLS-PT86',ma:'CM-SM-003',model:'NLS-PT86',mua:'2023/03',nsx:'Newland',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'CF0970'},
+{name:'Cân điện tử ALH4H 3kg',ma:'CM-DZB-007',model:'ALH4H 3kg',mua:'09/09/2021',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V21300315'},
+{name:'Cân điện tử AWH4-1.5KG',ma:'CM-DZB-008',model:'AWH4-1.5KG',mua:'2021/10',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V21300246'},
+{name:'Thước đo cân bằng',ma:'CM-PH-001',model:'',mua:'2023/02/02',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'CM-261023-001'},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-008',model:'0-150mm',mua:'2023/02/20',nsx:'Mitutoyo',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'21332797'},
+{name:'Cân điện tử AWH4-3KG',ma:'CM-DZB-014',model:'AWH4-3KG',mua:'2023/02/24',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V2310100'},
+{name:'Cân điện tử AWH4-5KG',ma:'CM-DZB-015',model:'AWH4-5KG',mua:'2023/02/24',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V2310139'},
+{name:'Cân điện tử 50kg',ma:'CM-DZB-016',model:'X-4252 KW-50kg',mua:'2023/05/19',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V2310102'},
+{name:'Cân điện tử AWH4-1.5KG',ma:'CM-DZB-010',model:'AWH4-1.5KG',mua:'24/11/2021',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'V21300352'},
+{name:'Đồng hồ đo độ dày',ma:'CM-HD-001',model:'đo độ dày',mua:'15/07/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'CFJK50'},
+{name:'Panme điện tử Mitutoyo 25mm',ma:'CM-QFC-001',model:'25mm',mua:'8/10/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'256666'},
+{name:'Máy đo lực siết vít HP-50',ma:'CM-NL-002',model:'HP-50',mua:'2024/09',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'892947'},
+{name:'Máy thử nghiệm phun muối',ma:'CM-YS-001',model:'KJU-952B',mua:'25/8/2021',nsx:'DELI',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'20210819-002'},
+{name:'Máy kiểm tra mài mòn cồn',ma:'CM-XM-001',model:'ZL-339',mua:'6/11/2021',nsx:'Zhenglan',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2021102504'},
+{name:'Máy đo độ lệch màu JZ-300',ma:'CM-SC-001',model:'JZ-300',mua:'6/11/2021',nsx:'Kingwell',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'KW30010418'},
+{name:'Máy đo lực đẩy kéo NK500',ma:'CM-LL-001',model:'NK500',mua:'6/11/2021',nsx:'AISRY',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2021102301'},
+{name:'Máy thử nghiệm RoHS UX220',ma:'CM-RJ-001',model:'UX220-XRF',mua:'26/10/2021',nsx:'Unique',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2716'},
+{name:'Máy đo kích thước 2D DL-4030',ma:'CM-YC-001',model:'DL-4030',mua:'2/11/2022',nsx:'DELI',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn văn Bản',tt:'active',note:'',serial:'20221118001'},
+{name:'Tủ nhiệt độ độ ẩm LX150L',ma:'CM-HW-001',model:'LX150L',mua:'6/11/2021',nsx:'HUITAI',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2021102A'},
+{name:'Máy thử nghiệm lão hóa UV225',ma:'CM-NH-001',model:'UV225;2.5KW',mua:'6/11/2021',nsx:'HUITAI',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'20211023'},
+{name:'Máy thử nghiệm rung lắc',ma:'CM-ZD-001',model:'HD-G809-600-3',mua:'23/11/2021',nsx:'HAIDA',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'EA211000701'},
+{name:'Máy đo độ sáng TES1330A',ma:'CM-GQ-001',model:'TES1330A',mua:'2021/03',nsx:'TES',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'210300630'},
+{name:'Đồng hồ đo Gauss TM-801',ma:'CM-GS-001',model:'TM-801EXP',mua:'3/12/2021',nsx:'KANETEC',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'05368'},
+{name:'Căn lá 0.05-1.00mm',ma:'CM-HB-001',model:'0.05-1.00mm',mua:'2024',nsx:'ASAKI',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'1407208931'},
+{name:'Máy đo độ cứng GS-709N',ma:'CM-YD-001',model:'GS-709N',mua:'',nsx:'TECHLOCK',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'41731'},
+{name:'Tủ so màu TILO P60+',ma:'CM-DS-001',model:'TILO P60+',mua:'28/10/2023',nsx:'TILO',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'423893'},
+{name:'Cân điện tử AWH4-1.5KG',ma:'CM-DZB-009',model:'AWH4-1.5KG',mua:'28/10/2021',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V21300350'},
+{name:'Cân điện tử 50kg',ma:'CM-DZB-012',model:'X-4252 KWS-50kg',mua:'27/4/2022',nsx:'EXCELL',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'V21300248'},
+{name:'Máy quét mã NLS-PT86',ma:'CM-SM-001',model:'NLS-PT86',mua:'2021/09',nsx:'Newland',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'PT86-30-BG00046'},
+{name:'Máy quét mã NLS-PT86',ma:'CM-SM-002',model:'NLS-PT86',mua:'2022/05',nsx:'Newland',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'PT86-30-BG00662'},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-007',model:'0-150mm',mua:'2021/10/27',nsx:'INSIZE',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'SC357120220700'},
+{name:'Cân điện tử KC3-50 50kg',ma:'CM-DZB-001',model:'KC3-50 50KG',mua:'2021/09/09',nsx:'EXCELL',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'V21300245'},
+{name:'Cân điện tử 5KG',ma:'CM-DZB-002',model:'5KG,0.2G',mua:'2021/09/09',nsx:'EXCELL',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'V21200289'},
+{name:'Cân điện tử 5KG',ma:'CM-DZB-003',model:'5KG,0.2G',mua:'2021/09/09',nsx:'EXCELL',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'V21300247'},
+{name:'Máy đo nhiệt độ tiếp xúc TM-321N',ma:'CM-JC-002',model:'TM-321N',mua:'2022',nsx:'Tenmars',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'211104680'},
+{name:'Máy đo nhiệt độ tiếp xúc TM-321N',ma:'CM-JC-003',model:'TM-321N',mua:'2022',nsx:'Tenmars',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'21110477'},
+{name:'Máy đo thủy phân JK-MS35',ma:'CM-LS-001',model:'JK-MS35',mua:'2023/08/19',nsx:'Junke',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'2023198'},
+{name:'Cân điện tử 3KG',ma:'CM-DZB-004',model:'3KG,0.2G',mua:'09/09/2021',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'V20300318'},
+{name:'Cân điện tử 5KG',ma:'CM-DZB-005',model:'5KG,0.2G',mua:'09/09/2021',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'V21200299'},
+{name:'Cân điện tử KC3-50 50kg',ma:'CM-DZB-006',model:'KC3-50 50KG',mua:'09/09/2021',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'V22100471'},
+{name:'Cân điện tử 200KG',ma:'CM-DZB-011',model:'200KG 0.05KG',mua:'24/11/2021',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'V21400322'},
+{name:'Máy kiểm tra mã vạch RJS D4000L',ma:'CM-TJ-001',model:'RJS D4000L',mua:'19/12/2023',nsx:'USA',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'987654438833'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-012',model:'0-150mm',mua:'6/12/2024',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'c nhẫn',serial:'A24188172'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-013',model:'0-150mm',mua:'6/12/2024',nsx:'Mitutoyo',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'Ép nhựa',serial:'A24188177'},
+{name:'Đồng hồ đo nhiệt độ độ ẩm HTC-1',ma:'CM-WSD-001',model:'HTC-1',mua:'2021',nsx:'HTC',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'CM-0003'},
+{name:'Đồng hồ đo nhiệt độ độ ẩm HTC-1',ma:'CM-WSD-004',model:'HTC-1',mua:'2023',nsx:'HTC',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'CM-0002'},
+{name:'Đồng hồ đo nhiệt độ độ ẩm HTC-1',ma:'CM-WSD-002',model:'HTC-1',mua:'2023',nsx:'HTC',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'LAB0001'},
+{name:'Đồng hồ đo nhiệt độ độ ẩm HTC-1',ma:'CM-WSD-005',model:'HTC-1',mua:'2024',nsx:'HTC',bp:'Hành chính',hc:'2025/12/16',next:'2026/12/16',ptr:'Trịnh Đình Huấn',tt:'active',note:'',serial:'LAB0002'},
+{name:'Đồng hồ đo nhiệt độ độ ẩm HTC-1',ma:'CM-WSD-003',model:'HTC-1',mua:'2023',nsx:'HTC',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'CM-0001'},
+{name:'Thước kẹp điện tử',ma:'CM-KC-014',model:'0-200mm',mua:'2024/04',nsx:'Mitutoyo',bp:'Công trình',hc:'2025/12/16',next:'2026/12/16',ptr:'Gary Fu',tt:'active',note:'',serial:'24057413'},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-008',model:'300mm',mua:'',nsx:'',bp:'Công trình',hc:'2025/12/16',next:'2026/12/16',ptr:'Gary Fu',tt:'active',note:'',serial:''},
+{name:'Máy đo độ ẩm giấy HT-904',ma:'CM-SD-002',model:'HT-904',mua:'2025/10/30',nsx:'',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'QC03598'},
+{name:'Cân tiểu ly 500g',ma:'CM-DZB-019',model:'500g/0.01g',mua:'2025',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Cân tiểu ly 500g',ma:'CM-DZB-020',model:'500g/0.01g',mua:'2025',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Cân tiểu ly 500g',ma:'CM-DZB-021',model:'500g/0.01g',mua:'2025',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Cân tiểu ly 500g',ma:'CM-DZB-022',model:'500g/0.01g',mua:'2025',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Cân tiểu ly 500g',ma:'CM-DZB-023',model:'500g/0.01g',mua:'2025',nsx:'',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:''},
+{name:'Thước kẹp điện tử 0-300mm',ma:'CM-KC-024',model:'0-300mm',mua:'2025/12',nsx:'Mitutoyo',bp:'Lắp ráp',hc:'2025/12/16',next:'2026/12/16',ptr:'Vũ Hồng Nhung',tt:'active',note:'',serial:'0111504'},
+{name:'Cân điện tử 15KG',ma:'CM-DZB-024',model:'15KG,20G',mua:'2025/10/10',nsx:'EXCELL',bp:'Kho',hc:'2025/12/16',next:'2026/12/16',ptr:'Hoàng Thị Phương',tt:'active',note:'',serial:'A24307042'},
+{name:'Thước kẹp điện tử 0-300mm',ma:'CM-KC-025',model:'0-300mm',mua:'17/09/2025',nsx:'Mitutoyo',bp:'Ép nhựa',hc:'2025/12/16',next:'2026/12/16',ptr:'Dương Văn Tuyển',tt:'active',note:'',serial:'0110954'},
+{name:'Jig đo chiều dài chân sạc TYPE-C',ma:'CM-CD-001',model:'0.01mm',mua:'01/12/2025',nsx:'',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2505170105'},
+{name:'Jig đo chiều dài chân sạc TYPE-C',ma:'CM-CD-002',model:'0.01mm',mua:'01/12/2025',nsx:'',bp:'Chất lượng',hc:'2025/12/16',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'active',note:'',serial:'2505170119'},
+];
+const defaultRaw2=[
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-001',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'26/12/2023',next:'',ptr:'Nguyễn Văn Bản',tt:'dead',note:'Bị hỏng',serial:'19303626'},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-002',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'26/12/2023',next:'',ptr:'Nguyễn Văn Bản',tt:'dead',note:'Bị hỏng',serial:'19304091'},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-004',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'26/12/2023',next:'',ptr:'Nguyễn Văn Bản',tt:'dead',note:'Bị hỏng',serial:'19304878'},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-005',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'26/12/2023',next:'',ptr:'Nguyễn Văn Bản',tt:'dead',note:'Bị hỏng',serial:'19305409'},
+{name:'Cân tiểu ly 200g',ma:'CM-DZB-0017',model:'200g/0.01g',mua:'',nsx:'EXCELL',bp:'Lắp ráp',hc:'24/10/2023',next:'',ptr:'Vũ Hồng Nhung',tt:'dead',note:'Bị hỏng',serial:'CM-241023002'},
+{name:'Máy đo nhiệt độ tiếp xúc',ma:'CM-JC-006',model:'',mua:'2023/03',nsx:'',bp:'Lắp ráp',hc:'11/02/2024',next:'',ptr:'Vũ Hồng Nhung',tt:'dead',note:'Hỏng',serial:'211104664'},
+{name:'Cân tiểu ly 200g',ma:'CM-DZB-0013',model:'200g/0.01g',mua:'2023/01/31',nsx:'EXCELL',bp:'Lắp ráp',hc:'2024/10/26',next:'',ptr:'Vũ Hồng Nhung',tt:'dead',note:'Bị hỏng',serial:'CM-241023001'},
+{name:'Máy đo nhiệt độ tiếp xúc TM-321N',ma:'CM-JC-001',model:'TM-321N',mua:'2022',nsx:'Tenmars',bp:'Ép nhựa',hc:'2024/12/20',next:'',ptr:'Dương Văn Tuyển',tt:'dead',note:'Bị hỏng',serial:'211104678'},
+];
+const defaultRaw3=[
+{name:'Đồng hồ sét dao trục Z',ma:'CM-ZSZ-001',model:'KD-50Z',mua:'26/12/2024',nsx:'Yaliang',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Đồng hồ đo độ sâu',ma:'CM-SD-001',model:'0-300MM',mua:'26/12/2024',nsx:'Mitutoyo',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Đồng hồ so 0.01mm',ma:'CM-QFB-001',model:'0.01mm',mua:'26/12/2024',nsx:'',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Đồng hồ so 0.01mm',ma:'CM-QFB-002',model:'0.01mm',mua:'26/12/2024',nsx:'',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Thước cuộn 5m',ma:'CM-JCH-002',model:'5000mm',mua:'26/12/2024',nsx:'',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-009',model:'300mm',mua:'26/12/2024',nsx:'sata',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Thước kẻ thép 30cm',ma:'CM-ZC-010',model:'300mm',mua:'26/12/2024',nsx:'sata',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'',serial:''},
+{name:'Máy đo độ cứng kim loại',ma:'CM-JY-001',model:'',mua:'2025/04',nsx:'',bp:'Chất lượng',hc:'2025/04/10',next:'',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-003',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2024/12/20',next:'',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+{name:'Thước cặp đồng hồ 0-150mm',ma:'CM-KC-006',model:'0-150mm',mua:'22/7/2021',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2024/12/20',next:'',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+{name:'Máy thử nghiệm chỉ số nóng chảy GX-210',ma:'CM-RR-001',model:'GX-210',mua:'6/11/2021',nsx:'AISRY',bp:'Chất lượng',hc:'2024/12/20',next:'',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+{name:'Đồng hồ so AYWB93',ma:'CM-BB-001',model:'0.01-10mm',mua:'25/01/2022',nsx:'Mitutoyo',bp:'Chất lượng',hc:'2024/12/20',next:'',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+{name:'Thước kẹp điện tử',ma:'CM-KC-018',model:'0-200mm',mua:'26/12/2024',nsx:'GuangLu',bp:'Gia công kim loại',hc:'2025/04/10',next:'',ptr:'Louis',tt:'inactive',note:'Không thấy',serial:''},
+{name:'Cân điện tử 2000kg',ma:'CM-DZB-018',model:'2000kg*0.5kg',mua:'1/1/2025',nsx:'EXCELL',bp:'Kho',hc:'2025/04/10',next:'',ptr:'Hoàng Thị Phương',tt:'inactive',note:'',serial:''},
+{name:'Máy đo nhiệt độ TASI TA612C',ma:'CM-JC-004',model:'612C',mua:'25/3/2024',nsx:'TASI',bp:'Chất lượng',hc:'2025/07/05',next:'2026/12/16',ptr:'Nguyễn Văn Bản',tt:'inactive',note:'',serial:''},
+];
+
+// ─── Data layer ───────────────────────────────────────────────────
+function loadData(){
+  try{
+    const s=localStorage.getItem(LS_KEY);
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  // build default with stable ids
+  const all=[];
+  [...defaultRaw1,...defaultRaw2,...defaultRaw3].forEach((r,i)=>{
+    all.push({...r, id:'d'+(i+1)});
+  });
+  return all;
+}
+
+function saveData(arr){
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  const now=new Date();
+  const ts=now.toLocaleDateString('vi-VN')+' '+now.toLocaleTimeString('vi-VN');
+  localStorage.setItem(LS_TIME, ts);
+  const el=document.getElementById('saveTimeLabel');
+  const el2=document.getElementById('saveTimeBottom');
+  if(el) el.textContent='💾 Lưu lúc: '+ts;
+  if(el2) el2.textContent='Lưu lúc: '+ts;
+}
+
+let DB = loadData();
+const savedTs = localStorage.getItem(LS_TIME);
+if(savedTs){
+  const el=document.getElementById('saveTimeLabel');
+  if(el) el.textContent='💾 Lưu lúc: '+savedTs;
+}
+
+function genId(){
+  return 'u'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────
+function parseDateStr(s){
+  if(!s||s.trim()==='')return null;
+  s=s.trim().replace(/'/g,'');
+  let m;
+  if((m=s.match(/^(\d{4})\/(\d{2})\/(\d{2})$/)))return new Date(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)))return new Date(+m[3],+m[2]-1,+m[1]);
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)))return new Date(+m[3],+m[2]-1,+m[1]);
+  if((m=s.match(/^(\d{4})\/(\d{2})$/)))return new Date(+m[1],+m[2]-1,1);
+  if((m=s.match(/^(\d{2})\/(\d{4})$/)))return new Date(+m[2],+m[1]-1,1);
+  return null;
+}
+function fmtDate(d){
+  if(!d)return '—';
+  return d.getFullYear()+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+String(d.getDate()).padStart(2,'0');
+}
+function daysDiff(d1,d2){return Math.round((d2-d1)/(1000*60*60*24));}
+
+function getLoai(name){
+  const n=(name||'').toLowerCase();
+  if(n.includes('thước kẹp')||n.includes('卡尺'))return 'Thước kẹp';
+  if(n.includes('thước kẻ')||n.includes('直尺'))return 'Thước kẻ thép';
+  if(n.includes('cân điện tử')||n.includes('电子称')||n.includes('cân tiểu ly')||n.includes('迷你电子秤'))return 'Cân điện tử';
+  if(n.includes('nhiệt độ')&&!n.includes('độ ẩm'))return 'Máy đo nhiệt độ';
+  if(n.includes('độ ẩm')||n.includes('湿度')||n.includes('温湿度'))return 'Đồng hồ nhiệt ẩm';
+  if(n.includes('dưỡng đo ren ngoài')||n.includes('环规'))return 'Dưỡng ren ngoài';
+  if(n.includes('dưỡng đo ren trong')||n.includes('塞规'))return 'Dưỡng ren trong';
+  if(n.includes('máy quét')||n.includes('扫描仪'))return 'Máy quét mã';
+  if(n.includes('đồng hồ so')||n.includes('百分表'))return 'Đồng hồ so';
+  if(n.includes('thước cặp đồng hồ'))return 'Thước cặp đồng hồ';
+  if(n.includes('độ cứng')||n.includes('硬度'))return 'Máy đo độ cứng';
+  if(n.includes('màu')||n.includes('色'))return 'Thiết bị đo màu';
+  if(n.includes('lực')||n.includes('扭力'))return 'Máy đo lực';
+  if(n.includes('khối')||n.includes('块规'))return 'Bộ đo khối';
+  if(n.includes('chiều cao')||n.includes('高度'))return 'Thước đo chiều cao';
+  if(n.includes('độ dày')||n.includes('厚度')||n.includes('căn lá'))return 'Đo độ dày/căn lá';
+  if(n.includes('panme')||n.includes('千分尺'))return 'Panme';
+  if(n.includes('thước cuộn'))return 'Thước cuộn';
+  if(n.includes('mã vạch')||n.includes('条码'))return 'Máy kiểm tra mã vạch';
+  if(n.includes('rung')||n.includes('振动'))return 'Máy thử rung';
+  if(n.includes('muối')||n.includes('盐水'))return 'Máy thử phun muối';
+  if(n.includes('mài mòn')||n.includes('磨擦'))return 'Máy thử mài mòn';
+  if(n.includes('kích thước')||n.includes('尺寸'))return 'Máy đo kích thước 2D';
+  if(n.includes('tủ nhiệt')||n.includes('恒温恒湿'))return 'Tủ nhiệt ẩm';
+  if(n.includes('uốn')||n.includes('弯折'))return 'Máy kiểm tra uốn';
+  if(n.includes('rút cắm')||n.includes('插拔'))return 'Máy thử rút cắm';
+  if(n.includes('nóng chảy')||n.includes('熔融'))return 'Máy thử chỉ số nóng chảy';
+  if(n.includes('jig')||n.includes('端子'))return 'Jig đo chân sạc';
+  if(n.includes('gauss')||n.includes('高斯'))return 'Đồng hồ đo Gauss';
+  if(n.includes('ánh sáng')||n.includes('光照'))return 'Máy đo độ sáng';
+  if(n.includes('rohs'))return 'Máy thử RoHS';
+  if(n.includes('lão hóa')||n.includes('黄变'))return 'Máy thử lão hóa';
+  if(n.includes('thủy phân')||n.includes('水份')||n.includes('độ ẩm giấy'))return 'Máy đo thủy phân';
+  if(n.includes('sét dao')||n.includes('Z軸'))return 'Đồng hồ sét dao';
+  if(n.includes('độ sâu')||n.includes('深度'))return 'Đồng hồ đo độ sâu';
+  if(n.includes('cân bằng')||n.includes('平衡'))return 'Thước đo cân bằng';
+  return 'Khác';
+}
+
+function processRow(r){
+  return {
+    ...r,
+    hcDate: parseDateStr(r.hc),
+    nextDate: parseDateStr(r.next),
+    loai: getLoai(r.name)
+  };
+}
+
+function getProcessed(){
+  const rows = DB.map(processRow);
+  const maMap={};
+  rows.forEach(r=>{ if(!maMap[r.ma]) maMap[r.ma]=[]; maMap[r.ma].push(r.id); });
+  const dupMas=new Set(Object.keys(maMap).filter(k=>maMap[k].length>1));
+  rows.forEach(r=>{ r.isDup=dupMas.has(r.ma); });
+  return {rows, dupMas};
+}
+
+function getAlertStatus(row){
+  if(row.tt!=='active')return null;
+  if(!row.nextDate)return null;
+  const d=daysDiff(TODAY,row.nextDate);
+  if(d<0)return 'overdue';
+  if(d<=WARN_DAYS)return 'soon';
+  return 'ok';
+}
+
+// ─── Admin ────────────────────────────────────────────────────────
+function toggleAdmin(){
+  if(isAdmin){ isAdmin=false; updateAdminUI(); return; }
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwError').style.display='none';
+  document.getElementById('pwModal').classList.add('show');
+  setTimeout(()=>document.getElementById('pwInput').focus(),100);
+}
+function checkPw(){
+  const v=document.getElementById('pwInput').value;
+  if(v===ADMIN_PASS){
+    isAdmin=true;
+    closeModal('pwModal');
+    updateAdminUI();
+  } else {
+    document.getElementById('pwError').style.display='block';
+  }
+}
+function updateAdminUI(){
+  const btn=document.getElementById('btnAdminToggle');
+  const addBtn=document.getElementById('btnAdd');
+  if(isAdmin){
+    btn.textContent='🔓 Thoát Admin';
+    btn.classList.add('active');
+    addBtn.classList.add('show');
+  } else {
+    btn.textContent='🔒 Chế độ Admin';
+    btn.classList.remove('active');
+    addBtn.classList.remove('show');
+  }
+  render();
+}
+
+// ─── Modal helpers ────────────────────────────────────────────────
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal('editModal');closeModal('pwModal');closeModal('notifModal'); }});
+
+// ─── Add / Edit ───────────────────────────────────────────────────
+function openAdd(){
+  if(!isAdmin)return;
+  editingId=null;
+  document.getElementById('editModalTitle').textContent='➕ Thêm thiết bị mới';
+  ['name','ma','model','ptr','serial','nsx','mua','hc','next','note'].forEach(f=>document.getElementById('f_'+f).value='');
+  document.getElementById('f_bp').value='Chất lượng';
+  document.getElementById('f_tt').value='active';
+  document.getElementById('editModal').classList.add('show');
+  setTimeout(()=>document.getElementById('f_name').focus(),100);
+}
+
+function openEdit(id){
+  if(!isAdmin)return;
+  const row=DB.find(r=>r.id===id);
+  if(!row)return;
+  editingId=id;
+  document.getElementById('editModalTitle').textContent='✏️ Chỉnh sửa thiết bị';
+  document.getElementById('f_name').value=row.name||'';
+  document.getElementById('f_ma').value=row.ma||'';
+  document.getElementById('f_model').value=row.model||'';
+  document.getElementById('f_bp').value=row.bp||'Chất lượng';
+  document.getElementById('f_tt').value=row.tt||'active';
+  document.getElementById('f_hc').value=row.hc||'';
+  document.getElementById('f_next').value=row.next||'';
+  document.getElementById('f_ptr').value=row.ptr||'';
+  document.getElementById('f_serial').value=row.serial||'';
+  document.getElementById('f_nsx').value=row.nsx||'';
+  document.getElementById('f_mua').value=row.mua||'';
+  document.getElementById('f_note').value=row.note||'';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function saveDevice(){
+  const name=document.getElementById('f_name').value.trim();
+  const ma=document.getElementById('f_ma').value.trim();
+  if(!name||!ma){ alert('Vui lòng nhập Tên thiết bị và Mã thiết bị!'); return; }
+
+  const obj={
+    name, ma,
+    model: document.getElementById('f_model').value.trim(),
+    bp: document.getElementById('f_bp').value,
+    tt: document.getElementById('f_tt').value,
+    hc: document.getElementById('f_hc').value.trim(),
+    next: document.getElementById('f_next').value.trim(),
+    ptr: document.getElementById('f_ptr').value.trim(),
+    serial: document.getElementById('f_serial').value.trim(),
+    nsx: document.getElementById('f_nsx').value.trim(),
+    mua: document.getElementById('f_mua').value.trim(),
+    note: document.getElementById('f_note').value.trim(),
+  };
+
+  if(editingId){
+    const idx=DB.findIndex(r=>r.id===editingId);
+    if(idx>-1) DB[idx]={...DB[idx],...obj};
+  } else {
+    obj.id=genId();
+    DB.push(obj);
+  }
+  saveData(DB);
+  closeModal('editModal');
+  buildFilters();
+  renderStats();
+  render();
+}
+
+function cloneDevice(id){
+  if(!isAdmin)return;
+  const row=DB.find(r=>r.id===id);
+  if(!row)return;
+  editingId=null;
+  document.getElementById('editModalTitle').textContent='📋 Nhân bản thiết bị';
+  document.getElementById('f_name').value=row.name||'';
+  document.getElementById('f_ma').value='';
+  document.getElementById('f_model').value=row.model||'';
+  document.getElementById('f_bp').value=row.bp||'Chất lượng';
+  document.getElementById('f_tt').value=row.tt||'active';
+  document.getElementById('f_hc').value=row.hc||'';
+  document.getElementById('f_next').value=row.next||'';
+  document.getElementById('f_ptr').value=row.ptr||'';
+  document.getElementById('f_serial').value='';
+  document.getElementById('f_nsx').value=row.nsx||'';
+  document.getElementById('f_mua').value=row.mua||'';
+  document.getElementById('f_note').value=row.note||'';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function deleteDevice(id){
+  if(!isAdmin)return;
+  const row=DB.find(r=>r.id===id);
+  if(!row)return;
+  if(!confirm('Xóa thiết bị "'+row.name+'" ('+row.ma+')?\nHành động này không thể hoàn tác.'))return;
+  DB=DB.filter(r=>r.id!==id);
+  saveData(DB);
+  buildFilters();
+  renderStats();
+  render();
+}
+
+// ─── Filters / options ────────────────────────────────────────────
+function buildFilters(){
+  const {rows}=getProcessed();
+  // dot
+  const dots=new Set();
+  rows.filter(r=>r.tt==='active').forEach(r=>{
+    if(r.nextDate){ const k=r.nextDate.getFullYear()+'/'+(String(r.nextDate.getMonth()+1).padStart(2,'0')); dots.add(k); }
+  });
+  const dotSel=document.getElementById('filterDot');
+  const dv=dotSel.value;
+  dotSel.innerHTML='<option value="">Tất cả đợt</option>'+[...dots].sort().map(d=>`<option value="${d}">${d}</option>`).join('');
+  if(dv) dotSel.value=dv;
+  // loai
+  const loais=new Set(rows.map(r=>r.loai));
+  const lSel=document.getElementById('filterLoai');
+  const lv=lSel.value;
+  lSel.innerHTML='<option value="">Tất cả loại</option>'+ [...loais].sort().map(l=>`<option value="${l}">${l}</option>`).join('');
+  if(lv) lSel.value=lv;
+}
+
+function getFiltered(){
+  const {rows}=getProcessed();
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  const fS=document.getElementById('filterStatus').value;
+  const fD=document.getElementById('filterDot').value;
+  const fL=document.getElementById('filterLoai').value;
+  return rows.filter(r=>{
+    if(q&&!((r.name||'').toLowerCase().includes(q)||(r.ma||'').toLowerCase().includes(q)||(r.serial||'').toLowerCase().includes(q)||(r.ptr||'').toLowerCase().includes(q)))return false;
+    if(fS&&r.tt!==fS)return false;
+    if(activeStatFilter==='soon'&&getAlertStatus(r)!=='soon')return false;
+    if(activeStatFilter==='overdue'&&getAlertStatus(r)!=='overdue')return false;
+    if(fD){
+      if(r.tt!=='active'||!r.nextDate)return false;
+      const k=r.nextDate.getFullYear()+'/'+(String(r.nextDate.getMonth()+1).padStart(2,'0'));
+      if(k!==fD)return false;
+    }
+    if(fL&&r.loai!==fL)return false;
+    return true;
+  });
+}
+
+// ─── Stats ────────────────────────────────────────────────────────
+function renderStats(){
+  const {rows,dupMas}=getProcessed();
+  const active=rows.filter(r=>r.tt==='active');
+  const overdue=active.filter(r=>getAlertStatus(r)==='overdue');
+  const soon=active.filter(r=>getAlertStatus(r)==='soon');
+  document.getElementById('stats').innerHTML=`
+    <div class="stat" data-stat="all" onclick="filterByStat('all')"><div class="stat-label">Tổng thiết bị</div><div class="stat-val">${rows.length}</div></div>
+    <div class="stat" data-stat="active" onclick="filterByStat('active')"><div class="stat-label">Đang sử dụng</div><div class="stat-val ok">${active.length}</div></div>
+    <div class="stat" data-stat="inactive" onclick="filterByStat('inactive')"><div class="stat-label">Không sử dụng</div><div class="stat-val" style="color:#64748b">${rows.filter(r=>r.tt==='inactive').length}</div></div>
+    <div class="stat" data-stat="dead" onclick="filterByStat('dead')"><div class="stat-label">Báo phế</div><div class="stat-val" style="color:#64748b">${rows.filter(r=>r.tt==='dead').length}</div></div>
+    <div class="stat" data-stat="soon" onclick="filterByStat('soon')"><div class="stat-label">Sắp đến kỳ (≤20 ngày)</div><div class="stat-val warn">${soon.length}</div></div>
+    <div class="stat" data-stat="overdue" onclick="filterByStat('overdue')"><div class="stat-label">Quá hạn</div><div class="stat-val danger">${overdue.length}</div></div>
+    <div class="stat" data-stat="dup" onclick="filterByStat('dup')"><div class="stat-label">Trùng mã</div><div class="stat-val warn">${dupMas.size} mã</div></div>
+  `;
+  markActiveStat();
+}
+
+let activeStatFilter='';
+function markActiveStat(){
+  document.querySelectorAll('.stat').forEach(el=>{
+    el.classList.toggle('active-stat', el.getAttribute('data-stat')===activeStatFilter);
+  });
+}
+function filterByStat(kind){
+  activeStatFilter = (activeStatFilter===kind) ? '' : kind;
+  // reset text search + dropdown filters mỗi lần lọc theo thẻ
+  document.getElementById('searchBox').value='';
+  document.getElementById('filterDot').value='';
+  document.getElementById('filterLoai').value='';
+  const fs=document.getElementById('filterStatus');
+  if(kind==='all'||kind==='soon'||kind==='overdue'||kind==='dup'){
+    fs.value='';
+  } else {
+    fs.value = (activeStatFilter===kind) ? kind : '';
+  }
+  if(kind==='dup'){
+    setTab('dup');
+  } else {
+    if(currentTab==='dup') setTab('all');
+    render();
+  }
+  markActiveStat();
+}
+
+// ─── Badges ───────────────────────────────────────────────────────
+function alertBadge(row){
+  if(row.tt!=='active')return '';
+  const s=getAlertStatus(row);
+  if(s==='overdue')return '<span class="badge badge-danger">Quá hạn</span>';
+  if(s==='soon')return `<span class="badge badge-warn">Còn ${daysDiff(TODAY,row.nextDate)} ngày</span>`;
+  return '<span class="badge badge-ok">Đã HC</span>';
+}
+function statusBadge(row){
+  if(row.tt==='dead')return '<span class="badge badge-dead">Báo phế</span>';
+  if(row.tt==='inactive')return '<span class="badge badge-inactive">Không dùng</span>';
+  return '';
+}
+
+// ─── Table render ─────────────────────────────────────────────────
+function renderTable(rows){
+  if(!rows.length)return '<div class="no-data">Không có dữ liệu</div>';
+  const actionCol=isAdmin?'<th style="width:110px">Thao tác</th>':'';
+  return `<div class="tbl-wrap"><table>
+    <tr>
+      <th style="width:36px">STT</th>
+      <th style="width:200px">Tên thiết bị</th>
+      <th style="width:110px">Mã</th>
+      <th style="width:80px">Bộ phận</th>
+      <th style="width:95px">Lần HC</th>
+      <th style="width:95px">HC tiếp theo</th>
+      <th style="width:110px">Trạng thái</th>
+      <th style="width:90px">Serial</th>
+      <th style="width:110px">Người phụ trách</th>
+      ${actionCol}
+    </tr>
+    ${rows.map((r,i)=>{
+      const actions=isAdmin?`<td><div class="row-actions">
+        <button class="btn-row edit" onclick="openEdit('${r.id}')">✏️</button>
+        <button class="btn-row clone" onclick="cloneDevice('${r.id}')">📋</button>
+        <button class="btn-row del" onclick="deleteDevice('${r.id}')">🗑️</button>
+      </div></td>`:'';
+      return `<tr>
+        <td style="color:#64748b;font-size:12px">${i+1}</td>
+        <td>${r.name||''}${r.isDup?'<span class="dup-badge">⚠ trùng mã</span>':''}</td>
+        <td style="font-size:12px;color:#64748b">${r.ma||''}</td>
+        <td style="font-size:12px">${r.bp||''}</td>
+        <td style="font-size:12px">${r.hcDate?fmtDate(r.hcDate):'—'}</td>
+        <td style="font-size:12px">${r.nextDate?fmtDate(r.nextDate):'—'}</td>
+        <td>${alertBadge(r)}${statusBadge(r)}${r.note?`<div style="font-size:11px;color:#64748b;margin-top:2px">${r.note}</div>`:''}</td>
+        <td style="font-size:11px;color:#64748b">${r.serial||'—'}</td>
+        <td style="font-size:12px">${r.ptr||'—'}</td>
+        ${actions}
+      </tr>`;
+    }).join('')}
+  </table></div>`;
+}
+
+// ─── Tab renders ──────────────────────────────────────────────────
+let currentTab='all';
+function clearFilters(){
+  document.getElementById('searchBox').value='';
+  document.getElementById('filterStatus').value='';
+  document.getElementById('filterDot').value='';
+  document.getElementById('filterLoai').value='';
+  activeStatFilter='';
+  markActiveStat();
+  render();
+}
+function setTab(t){
+  currentTab=t;
+  if(t!=='dup') activeStatFilter = (activeStatFilter==='dup') ? '' : activeStatFilter;
+  document.querySelectorAll('.tab').forEach(el=>{
+    el.classList.toggle('active',el.getAttribute('onclick').includes("'"+t+"'"));
+  });
+  markActiveStat();
+  render();
+}
+
+function renderByDot(rows){
+  const active=rows.filter(r=>r.tt==='active');
+  const dots={};
+  active.forEach(r=>{
+    const k=r.nextDate?r.nextDate.getFullYear()+'/'+(String(r.nextDate.getMonth()+1).padStart(2,'0')):'Chưa xác định';
+    if(!dots[k])dots[k]=[];
+    dots[k].push(r);
+  });
+  const sorted=Object.keys(dots).sort();
+  if(!sorted.length)return '<div class="no-data">Không có dữ liệu</div>';
+  return sorted.map(k=>{
+    const items=dots[k];
+    const hasWarn=items.some(r=>getAlertStatus(r)==='soon'||getAlertStatus(r)==='overdue');
+    return `<div class="section">
+      <div class="sec-header" onclick="toggleSection(this)">
+        <span class="sec-title">📅 Đợt ${k}${hasWarn?' ⚠':''}</span>
+        <span class="sec-count">${items.length} thiết bị</span>
+        <span class="chevron open">▾</span>
+      </div>
+      <div class="sec-body">${renderTable(items)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderByLoai(rows){
+  const loais={};
+  rows.forEach(r=>{ if(!loais[r.loai])loais[r.loai]=[]; loais[r.loai].push(r); });
+  return Object.keys(loais).sort().map(k=>`<div class="section">
+    <div class="sec-header" onclick="toggleSection(this)">
+      <span class="sec-title">🔧 ${k}</span>
+      <span class="sec-count">${loais[k].length}</span>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="sec-body">${renderTable(loais[k])}</div>
+  </div>`).join('');
+}
+
+function renderByBP(rows){
+  const bps={};
+  rows.forEach(r=>{ if(!bps[r.bp])bps[r.bp]=[]; bps[r.bp].push(r); });
+  return Object.keys(bps).sort().map(k=>`<div class="section">
+    <div class="sec-header" onclick="toggleSection(this)">
+      <span class="sec-title">🏭 ${k}</span>
+      <span class="sec-count">${bps[k].length}</span>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="sec-body">${renderTable(bps[k])}</div>
+  </div>`).join('');
+}
+
+function renderDup(){
+  const {rows}=getProcessed();
+  const dups=rows.filter(r=>r.isDup);
+  if(!dups.length)return '<div class="no-data" style="color:#3B6D11">✅ Không phát hiện trùng mã!</div>';
+  const grouped={};
+  dups.forEach(r=>{ if(!grouped[r.ma])grouped[r.ma]=[]; grouped[r.ma].push(r); });
+  return Object.keys(grouped).sort().map(ma=>`<div class="section">
+    <div class="sec-header" onclick="toggleSection(this)">
+      <span class="sec-title" style="color:#854F0B">⚠️ Mã trùng: ${ma}</span>
+      <span class="sec-count">${grouped[ma].length} bản ghi</span>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="sec-body">${renderTable(grouped[ma])}</div>
+  </div>`).join('');
+}
+
+function render(){
+  const filtered=getFiltered();
+  let html='';
+  if(currentTab==='all') html=renderTable(filtered);
+  else if(currentTab==='dot') html=renderByDot(filtered);
+  else if(currentTab==='loai') html=renderByLoai(filtered);
+  else if(currentTab==='bp') html=renderByBP(filtered);
+  else if(currentTab==='dup') html=renderDup();
+  document.getElementById('main').innerHTML=html;
+}
+
+function toggleSection(el){
+  const body=el.nextElementSibling;
+  const ch=el.querySelector('.chevron');
+  const open=ch.classList.contains('open');
+  body.style.display=open?'none':'';
+  ch.classList.toggle('open',!open);
+}
+
+// ─── Export / Import ─────────────────────────────────────────────
+function exportHtml(){
+  // Thay thế dòng TODAY cứng đoán bằng new Date() để file backup luôn dùng ngày thực
+  let html=document.documentElement.outerHTML;
+  html=html.replace(
+    /const TODAY\s*=\s*new Date\([^)]*\)[^;]*;[^\n]*/,
+    'const TODAY = new Date(); TODAY.setHours(0,0,0,0); // Tự động lấy ngày thực của máy tính'
+  );
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Quan_ly_hieu_chuan_backup.html';
+  a.click();
+}
+function importHtml(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=function(){
+    document.open();document.write(r.result);document.close();
+  };
+  r.readAsText(f);
+}
+
+// ─── Notification on load ────────────────────────────────────────
+function showNotification(){
+  const {rows}=getProcessed();
+  const active=rows.filter(r=>r.tt==='active');
+  const overdue=active.filter(r=>getAlertStatus(r)==='overdue');
+  const soon=active.filter(r=>getAlertStatus(r)==='soon');
+  if(!overdue.length&&!soon.length)return;
+  let html='';
+  if(overdue.length){
+    html+=`<div style="font-weight:600;color:#A32D2D;margin-bottom:6px">🔴 Quá hạn hiệu chuẩn (${overdue.length} thiết bị)</div>`;
+    overdue.forEach(r=>{ html+=`<div class="notif-item"><b>${r.name}</b> — ${r.ma} <span class="badge badge-danger" style="margin-left:6px">HC tiếp theo: ${r.nextDate?fmtDate(r.nextDate):'?'}</span></div>`; });
+  }
+  if(soon.length){
+    html+=`<div style="font-weight:600;color:#854F0B;margin:${overdue.length?'14px':0} 0 6px">🟠 Sắp đến kỳ hiệu chuẩn (${soon.length} thiết bị)</div>`;
+    soon.forEach(r=>{ const d=daysDiff(TODAY,r.nextDate); html+=`<div class="notif-item"><b>${r.name}</b> — ${r.ma} <span class="badge badge-warn" style="margin-left:6px">Còn ${d} ngày (${fmtDate(r.nextDate)})</span></div>`; });
+  }
+  document.getElementById('notifContent').innerHTML=html;
+  document.getElementById('notifModal').classList.add('show');
+}
+
+// ─── Init ────────────────────────────────────────────────────────
+buildFilters();
+renderStats();
+render();
+setTimeout(showNotification, 400);
+</script>
+</body>
+</html>
